@@ -159,3 +159,4 @@ This project is created for educational and local tournament use. Feel free to f
 ---
 
 **Happy Dueling!** 🃏✨
+# ygo_leaderboard
