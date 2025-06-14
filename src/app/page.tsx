@@ -1,103 +1,190 @@
-import Image from "next/image";
+import { TopPlayer } from "@/components/TopPlayer";
+import { FeaturedPlayers } from "@/components/FeaturedPlayers";
+import { LeaderboardTable } from "@/components/LeaderboardTable";
+import { PublicHeader } from "../components/PublicHeader";
+import { getAllPlayers, getAllMatches, getAllLocals } from "@/lib/firebaseService";
+import { Users, Trophy, Swords, BarChart3 } from "lucide-react";
+import { Player, Match, Local } from "@/types";
 
-export default function Home() {
-  return (
-    <div className="grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20 font-[family-name:var(--font-geist-sans)]">
-      <main className="flex flex-col gap-[32px] row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="list-inside list-decimal text-sm/6 text-center sm:text-left font-[family-name:var(--font-geist-mono)]">
-          <li className="mb-2 tracking-[-.01em]">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] px-1 py-0.5 rounded font-[family-name:var(--font-geist-mono)] font-semibold">
-              src/app/page.tsx
-            </code>
-            .
-          </li>
-          <li className="tracking-[-.01em]">
-            Save and see your changes instantly.
-          </li>
-        </ol>
+export default async function Home() {
+  // Fetch real data from Firebase
+  let players: Player[] = [];
+  let matches: Match[] = [];
+  let locals: Local[] = [];
+  let error = null;
 
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:w-auto"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 w-full sm:w-auto md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
-          </a>
+  try {
+    [players, matches, locals] = await Promise.all([
+      getAllPlayers(),
+      getAllMatches(),
+      getAllLocals()
+    ]);
+  } catch (err) {
+    console.error('Error fetching data:', err);
+    error = 'Failed to load leaderboard data';
+  }
+
+  // Create local name mapping
+  const localMap: { [key: string]: string } = {};
+  locals.forEach(local => {
+    localMap[local.id] = local.name;
+  });
+
+  // Calculate stats
+  const totalPlayers = players.length;
+  const totalMatches = matches.length;
+  const averageElo = totalPlayers > 0 ? Math.round(players.reduce((sum, p) => sum + p.elo, 0) / totalPlayers) : 0;
+
+  // Split players for different sections
+  const topPlayer = players[0] || null;
+  const featuredPlayers = players.slice(1, 5);
+  const leaderboardPlayers = players.slice(5);
+
+  if (error) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 flex items-center justify-center">
+        <div className="text-center">
+          <h1 className="text-2xl font-bold text-white mb-4">Error Loading Leaderboard</h1>
+          <p className="text-slate-400">{error}</p>
         </div>
-      </main>
-      <footer className="row-start-3 flex gap-[24px] flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
+      </div>
+    );
+  }
+
+  if (totalPlayers === 0) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900">
+        <div className="relative z-10">
+          <PublicHeader />
+          <div className="flex items-center justify-center min-h-[60vh]">
+            <div className="text-center">
+              <h1 className="text-3xl font-bold text-white mb-4">No Players Found</h1>
+              <p className="text-slate-400 mb-6">The leaderboard is empty. Add some players to get started!</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900">
+      {/* Background Pattern */}
+      <div className="absolute inset-0 opacity-50" style={{
+        backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.03'%3E%3Ccircle cx='30' cy='30' r='2'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")`
+      }} />
+
+      <div className="relative z-10">
+        {/* Public Header */}
+        <PublicHeader />
+
+        {/* Header */}
+        <header className="border-b border-slate-700/50 bg-slate-900/50 backdrop-blur-sm">
+          <div className="mx-auto max-w-7xl px-6 py-8">
+            <div className="flex items-center justify-between">
+              <div>
+                <h1 className="text-4xl font-black text-white">
+                  Yu-Gi-Oh! <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-purple-600">Leaderboard</span>
+                </h1>
+                <p className="mt-2 text-lg text-slate-400">
+                  Competitive rankings for local duelists
+                </p>
+              </div>
+
+              {/* Stats Summary */}
+              <div className="hidden lg:flex items-center gap-8">
+                <div className="text-center">
+                  <div className="flex items-center gap-2 text-2xl font-bold text-white">
+                    <Users className="h-6 w-6 text-blue-400" />
+                    {totalPlayers}
+                  </div>
+                  <div className="text-sm text-slate-400">Total Players</div>
+                </div>
+
+                <div className="text-center">
+                  <div className="flex items-center gap-2 text-2xl font-bold text-white">
+                    <Swords className="h-6 w-6 text-green-400" />
+                    {totalMatches}
+                  </div>
+                  <div className="text-sm text-slate-400">Total Matches</div>
+                </div>
+
+                <div className="text-center">
+                  <div className="flex items-center gap-2 text-2xl font-bold text-white">
+                    <BarChart3 className="h-6 w-6 text-purple-400" />
+                    {averageElo}
+                  </div>
+                  <div className="text-sm text-slate-400">Avg Rating</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </header>
+
+        {/* Main Content */}
+        <main className="mx-auto max-w-7xl px-6 py-8 overflow-visible">
+          <div className="space-y-12">
+            {/* Top Player Section */}
+            {topPlayer && (
+              <section>
+                <div className="mb-6 flex items-center gap-3">
+                  <Trophy className="h-8 w-8 text-yellow-500" />
+                  <h2 className="text-3xl font-bold text-white">Champion</h2>
+                </div>
+                <TopPlayer player={topPlayer} localMap={localMap} />
+              </section>
+            )}
+
+            {/* Featured Players Section */}
+            {featuredPlayers.length > 0 && (
+              <section className="overflow-visible">
+                <div className="mb-6 flex items-center gap-3">
+                  <Users className="h-8 w-8 text-blue-400" />
+                  <h2 className="text-3xl font-bold text-white">Top Contenders</h2>
+                </div>
+                <div className="pb-6">
+                  <FeaturedPlayers players={featuredPlayers} localMap={localMap} />
+                </div>
+              </section>
+            )}
+
+            {/* Leaderboard Table Section */}
+            {leaderboardPlayers.length > 0 && (
+              <section>
+                <div className="mb-6 flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <BarChart3 className="h-8 w-8 text-purple-400" />
+                    <h2 className="text-3xl font-bold text-white">Full Rankings</h2>
+                  </div>
+
+                  <div className="flex items-center gap-4 text-sm text-slate-400">
+                    <span>Showing ranks 6-{leaderboardPlayers.length + 5}</span>
+                    <div className="h-4 w-px bg-slate-600" />
+                    <span>Updated live</span>
+                  </div>
+                </div>
+                <LeaderboardTable players={leaderboardPlayers} localMap={localMap} />
+              </section>
+            )}
+          </div>
+        </main>
+
+        {/* Footer */}
+        <footer className="border-t border-slate-700/50 bg-slate-900/50 backdrop-blur-sm mt-16">
+          <div className="mx-auto max-w-7xl px-6 py-8">
+            <div className="flex items-center justify-between">
+              <div className="text-slate-400">
+                <p>&copy; 2024 Yu-Gi-Oh! Local Leaderboard. Built with Next.js & Tailwind CSS.</p>
+              </div>
+
+              <div className="flex items-center gap-4 text-sm">
+                <span className="text-slate-400">ELO System Active</span>
+                <div className="h-2 w-2 rounded-full bg-green-400 animate-pulse" />
+              </div>
+            </div>
+          </div>
+        </footer>
+      </div>
     </div>
   );
 }
