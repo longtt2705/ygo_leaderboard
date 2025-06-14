@@ -1,28 +1,76 @@
+'use client';
+
+import { useState, useEffect } from 'react';
 import { TopPlayer } from "@/components/TopPlayer";
 import { FeaturedPlayers } from "@/components/FeaturedPlayers";
 import { LeaderboardTable } from "@/components/LeaderboardTable";
 import { PublicHeader } from "../components/PublicHeader";
-import { getAllPlayers, getAllMatches, getAllLocals } from "@/lib/firebaseService";
-import { Users, Trophy, Swords, BarChart3 } from "lucide-react";
+import { subscribeToPlayers, getAllMatches, getAllLocals } from "@/lib/firebaseService";
+import { Users, Trophy, Swords, BarChart3, RefreshCw } from "lucide-react";
 import { Player, Match, Local } from "@/types";
 
-export default async function Home() {
-  // Fetch real data from Firebase
-  let players: Player[] = [];
-  let matches: Match[] = [];
-  let locals: Local[] = [];
-  let error = null;
+// Force dynamic rendering to prevent caching
+export const dynamic = 'force-dynamic';
 
-  try {
-    [players, matches, locals] = await Promise.all([
-      getAllPlayers(),
-      getAllMatches(),
-      getAllLocals()
-    ]);
-  } catch (err) {
-    console.error('Error fetching data:', err);
-    error = 'Failed to load leaderboard data';
-  }
+export default function Home() {
+  const [players, setPlayers] = useState<Player[]>([]);
+  const [matches, setMatches] = useState<Match[]>([]);
+  const [locals, setLocals] = useState<Local[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [refreshing, setRefreshing] = useState(false);
+
+  useEffect(() => {
+    let unsubscribe: (() => void) | null = null;
+
+    const initializeData = async () => {
+      try {
+        // Set up real-time listener for players
+        unsubscribe = subscribeToPlayers((updatedPlayers) => {
+          setPlayers(updatedPlayers);
+          setLoading(false);
+        });
+
+        // Fetch matches and locals (these don't need real-time updates for the main page)
+        const [matchesData, localsData] = await Promise.all([
+          getAllMatches(),
+          getAllLocals()
+        ]);
+
+        setMatches(matchesData);
+        setLocals(localsData);
+      } catch (err) {
+        console.error('Error fetching data:', err);
+        setError('Failed to load leaderboard data');
+        setLoading(false);
+      }
+    };
+
+    initializeData();
+
+    // Cleanup subscription on unmount
+    return () => {
+      if (unsubscribe) {
+        unsubscribe();
+      }
+    };
+  }, []);
+
+  const handleRefresh = async () => {
+    setRefreshing(true);
+    try {
+      const [matchesData, localsData] = await Promise.all([
+        getAllMatches(),
+        getAllLocals()
+      ]);
+      setMatches(matchesData);
+      setLocals(localsData);
+    } catch (err) {
+      console.error('Error refreshing data:', err);
+    } finally {
+      setRefreshing(false);
+    }
+  };
 
   // Create local name mapping
   const localMap: { [key: string]: string } = {};
@@ -40,12 +88,31 @@ export default async function Home() {
   const featuredPlayers = players.slice(1, 5);
   const leaderboardPlayers = players.slice(5);
 
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto mb-4"></div>
+          <h1 className="text-2xl font-bold text-white mb-2">Loading Leaderboard</h1>
+          <p className="text-slate-400">Fetching the latest rankings...</p>
+        </div>
+      </div>
+    );
+  }
+
   if (error) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 flex items-center justify-center">
         <div className="text-center">
           <h1 className="text-2xl font-bold text-white mb-4">Error Loading Leaderboard</h1>
           <p className="text-slate-400">{error}</p>
+          <button
+            onClick={handleRefresh}
+            className="mt-4 flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition-colors mx-auto"
+          >
+            <RefreshCw className="h-4 w-4" />
+            Retry
+          </button>
         </div>
       </div>
     );
@@ -83,10 +150,16 @@ export default async function Home() {
           <div className="mx-auto max-w-7xl px-6 py-8">
             <div className="flex items-center justify-between">
               <div>
-                <h1 className="text-4xl font-black text-white">
-                  Yu-Gi-Oh! <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-purple-600">Leaderboard</span>
-                </h1>
-                <p className="mt-2 text-lg text-slate-400">
+                <div className="flex items-center gap-3 mb-2">
+                  <h1 className="text-4xl font-black text-white">
+                    Yu-Gi-Oh! <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-purple-600">Leaderboard</span>
+                  </h1>
+                  <div className="flex items-center gap-2 px-3 py-1 bg-green-500/10 border border-green-500/30 rounded-full">
+                    <div className="h-2 w-2 rounded-full bg-green-400 animate-pulse" />
+                    <span className="text-green-400 text-sm font-medium">LIVE</span>
+                  </div>
+                </div>
+                <p className="text-lg text-slate-400">
                   Competitive rankings for local duelists
                 </p>
               </div>
@@ -116,6 +189,16 @@ export default async function Home() {
                   </div>
                   <div className="text-sm text-slate-400">Avg Rating</div>
                 </div>
+
+                <button
+                  onClick={handleRefresh}
+                  disabled={refreshing}
+                  className="flex items-center gap-2 bg-slate-700 hover:bg-slate-600 disabled:bg-slate-700/50 text-white px-3 py-2 rounded-lg transition-colors"
+                  title="Refresh data"
+                >
+                  <RefreshCw className={`h-4 w-4 ${refreshing ? 'animate-spin' : ''}`} />
+                  {refreshing ? 'Refreshing...' : 'Refresh'}
+                </button>
               </div>
             </div>
           </div>
@@ -160,7 +243,10 @@ export default async function Home() {
                   <div className="flex items-center gap-4 text-sm text-slate-400">
                     <span>Showing ranks 6-{leaderboardPlayers.length + 5}</span>
                     <div className="h-4 w-px bg-slate-600" />
-                    <span>Updated live</span>
+                    <div className="flex items-center gap-2">
+                      <div className="h-2 w-2 rounded-full bg-green-400 animate-pulse" />
+                      <span>Live Updates</span>
+                    </div>
                   </div>
                 </div>
                 <LeaderboardTable players={leaderboardPlayers} localMap={localMap} />

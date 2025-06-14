@@ -406,10 +406,14 @@ export async function recalculateRankings(): Promise<void> {
 // Sync player stats with actual match history
 export async function syncPlayerStats(): Promise<void> {
   try {
+    console.log('Starting sync operation...');
+    
     const [players, matches] = await Promise.all([
       getAllPlayers(),
       getAllMatches()
     ]);
+    
+    console.log(`Found ${players.length} players and ${matches.length} matches`);
 
     const playerStats: { [playerId: string]: {
       wins: number;
@@ -512,7 +516,14 @@ export async function syncPlayerStats(): Promise<void> {
     
     console.log('Player stats synced successfully');
   } catch (error) {
-    console.error('Error syncing player stats:', error);
+    console.error('Sync failed:', error);
+    
+    // Log more details for debugging
+    if (error instanceof Error) {
+      console.error('Error message:', error.message);
+      console.error('Error stack:', error.stack);
+    }
+    
     throw error;
   }
 } 
