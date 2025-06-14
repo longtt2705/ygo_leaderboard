@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { ProtectedRoute } from '@/components/auth/ProtectedRoute';
 import { seedDatabase } from '@/lib/seedData';
+import { syncPlayerStats } from '@/lib/firebaseService';
 import { Database, Users, Swords, MapPin, Plus, Loader2 } from 'lucide-react';
 import Link from 'next/link';
 
@@ -17,6 +18,8 @@ export default function AdminPage() {
 function AdminDashboard() {
     const [seeding, setSeeding] = useState(false);
     const [seedResult, setSeedResult] = useState<string>('');
+    const [syncing, setSyncing] = useState(false);
+    const [syncResult, setSyncResult] = useState<string>('');
 
     const handleSeedDatabase = async () => {
         try {
@@ -28,6 +31,19 @@ function AdminDashboard() {
             setSeedResult(`Error seeding database: ${error instanceof Error ? error.message : 'Unknown error'}`);
         } finally {
             setSeeding(false);
+        }
+    };
+
+    const handleSyncStats = async () => {
+        try {
+            setSyncing(true);
+            setSyncResult('');
+            await syncPlayerStats();
+            setSyncResult('Player stats synced successfully! All rankings and statistics updated.');
+        } catch (error) {
+            setSyncResult(`Error syncing stats: ${error instanceof Error ? error.message : 'Unknown error'}`);
+        } finally {
+            setSyncing(false);
         }
     };
 
@@ -92,6 +108,40 @@ function AdminDashboard() {
                                             : 'bg-green-500/10 border border-green-500/30 text-green-400'
                                             }`}>
                                             {seedResult}
+                                        </div>
+                                    )}
+                                </div>
+
+                                <div className="p-4 bg-slate-700/30 rounded-lg border border-slate-600/50">
+                                    <h3 className="font-semibold text-white mb-2">Sync Player Stats</h3>
+                                    <p className="text-slate-400 text-sm mb-4">
+                                        Recalculate all player statistics and rankings based on actual match history.
+                                        Use this if the leaderboard seems out of sync.
+                                    </p>
+                                    <button
+                                        onClick={handleSyncStats}
+                                        disabled={syncing}
+                                        className="flex items-center gap-2 bg-green-600 hover:bg-green-700 disabled:bg-green-600/50 text-white px-4 py-2 rounded-lg transition-colors"
+                                    >
+                                        {syncing ? (
+                                            <>
+                                                <Loader2 className="h-4 w-4 animate-spin" />
+                                                Syncing Stats...
+                                            </>
+                                        ) : (
+                                            <>
+                                                <Database className="h-4 w-4" />
+                                                Sync Stats
+                                            </>
+                                        )}
+                                    </button>
+
+                                    {syncResult && (
+                                        <div className={`mt-4 p-3 rounded-lg text-sm ${syncResult.includes('Error')
+                                            ? 'bg-red-500/10 border border-red-500/30 text-red-400'
+                                            : 'bg-green-500/10 border border-green-500/30 text-green-400'
+                                            }`}>
+                                            {syncResult}
                                         </div>
                                     )}
                                 </div>

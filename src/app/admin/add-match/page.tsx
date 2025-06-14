@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { ProtectedRoute } from '@/components/auth/ProtectedRoute';
-import { getAllPlayers, createMatch, updatePlayer } from '@/lib/firebaseService';
+import { getAllPlayers, createMatch, updatePlayer, recalculateRankings } from '@/lib/firebaseService';
 import { calculateElo, getKFactor, getTierFromElo } from '@/lib/utils';
 import { Player, MatchType } from '@/types';
 import { ArrowLeft, Swords, User, Trophy, Save } from 'lucide-react';
@@ -139,6 +139,9 @@ function AddMatchForm() {
                 winRate: newLoserWinRate,
                 streak: newLoserStreak
             });
+
+            // Recalculate all player rankings after match
+            await recalculateRankings();
 
             setSuccess(true);
 

@@ -382,4 +382,137 @@ export async function getLocalsByIds(localIds: string[]): Promise<{ [key: string
     console.error('Error getting locals by IDs:', error);
     return {};
   }
+}
+
+// Recalculate all player rankings based on current ELO
+export async function recalculateRankings(): Promise<void> {
+  try {
+    // Get all players sorted by ELO
+    const players = await getAllPlayers();
+    
+    // Update each player's rank
+    const updatePromises = players.map((player, index) => 
+      updatePlayer(player.id, { rank: index + 1 })
+    );
+    
+    await Promise.all(updatePromises);
+    console.log('Rankings recalculated successfully');
+  } catch (error) {
+    console.error('Error recalculating rankings:', error);
+    throw error;
+  }
+}
+
+// Sync player stats with actual match history
+export async function syncPlayerStats(): Promise<void> {
+  try {
+    const [players, matches] = await Promise.all([
+      getAllPlayers(),
+      getAllMatches()
+    ]);
+
+    const playerStats: { [playerId: string]: {
+      wins: number;
+      losses: number;
+      totalMatches: number;
+      winRate: number;
+      currentStreak: number;
+      recentMatches: Match[];
+    }} = {};
+
+    // Initialize stats for all players
+    players.forEach(player => {
+      playerStats[player.id] = {
+        wins: 0,
+        losses: 0,
+        totalMatches: 0,
+        winRate: 0,
+        currentStreak: 0,
+        recentMatches: []
+      };
+    });
+
+    // Calculate stats from matches
+    matches.forEach(match => {
+      const { player1Id, player2Id, winnerId } = match;
+      
+      // Ensure match has a proper date
+      const matchWithDate = {
+        ...match,
+        date: match.date instanceof Date ? match.date : new Date(match.date)
+      };
+      
+      if (playerStats[player1Id]) {
+        playerStats[player1Id].totalMatches++;
+        playerStats[player1Id].recentMatches.push(matchWithDate);
+        if (winnerId === player1Id) {
+          playerStats[player1Id].wins++;
+        } else {
+          playerStats[player1Id].losses++;
+        }
+      }
+      
+      if (playerStats[player2Id]) {
+        playerStats[player2Id].totalMatches++;
+        playerStats[player2Id].recentMatches.push(matchWithDate);
+        if (winnerId === player2Id) {
+          playerStats[player2Id].wins++;
+        } else {
+          playerStats[player2Id].losses++;
+        }
+      }
+    });
+
+    // Calculate win rates and streaks
+    Object.keys(playerStats).forEach(playerId => {
+      const stats = playerStats[playerId];
+      stats.winRate = stats.totalMatches > 0 ? Math.round((stats.wins / stats.totalMatches) * 100) : 0;
+      
+      // Calculate current streak from recent matches
+      const playerMatches = stats.recentMatches
+        .filter(match => match.player1Id === playerId || match.player2Id === playerId)
+        .sort((a, b) => b.date.getTime() - a.date.getTime());
+      
+      let streak = 0;
+      let lastResult: 'W' | 'L' | null = null;
+      
+      for (const match of playerMatches) {
+        const isWin = match.winnerId === playerId;
+        const currentResult = isWin ? 'W' : 'L';
+        
+        if (lastResult === null) {
+          lastResult = currentResult;
+          streak = isWin ? 1 : -1;
+        } else if (lastResult === currentResult) {
+          streak = isWin ? streak + 1 : streak - 1;
+        } else {
+          break;
+        }
+      }
+      
+      stats.currentStreak = streak;
+    });
+
+    // Update all players with corrected stats
+    const updatePromises = players.map(player => {
+      const stats = playerStats[player.id];
+      return updatePlayer(player.id, {
+        wins: stats.wins,
+        losses: stats.losses,
+        totalMatches: stats.totalMatches,
+        winRate: stats.winRate,
+        streak: stats.currentStreak
+      });
+    });
+
+    await Promise.all(updatePromises);
+    
+    // Recalculate rankings after syncing stats
+    await recalculateRankings();
+    
+    console.log('Player stats synced successfully');
+  } catch (error) {
+    console.error('Error syncing player stats:', error);
+    throw error;
+  }
 } 
