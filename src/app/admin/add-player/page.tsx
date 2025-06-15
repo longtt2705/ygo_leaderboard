@@ -7,6 +7,7 @@ import { createPlayerProfile, getAllLocals, getAllDeckArchetypes } from '@/lib/f
 import { Local, DeckArchetype } from '@/types';
 import { ArrowLeft, User, Gamepad2, MapPin, Save, X } from 'lucide-react';
 import Link from 'next/link';
+import { ImageUpload } from '@/components/ImageUpload';
 
 export default function AddPlayerPage() {
     return (
@@ -283,20 +284,15 @@ function AddPlayerForm() {
                                 )}
                             </div>
 
-                            {/* Avatar URL (Optional) */}
+                            {/* Avatar Upload */}
                             <div>
-                                <label htmlFor="avatar" className="block text-sm font-medium text-slate-300 mb-2">
-                                    Avatar URL (Optional)
+                                <label className="block text-sm font-medium text-slate-300 mb-2">
+                                    Avatar (Optional)
                                 </label>
-                                <input
-                                    id="avatar"
-                                    name="avatar"
-                                    type="url"
-                                    placeholder="https://example.com/avatar.jpg"
-                                    value={formData.avatar}
-                                    onChange={handleInputChange}
-                                    className="w-full px-4 py-3 bg-slate-700/50 border border-slate-600 rounded-lg text-white placeholder:text-slate-400 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
-                                    disabled={loading}
+                                <ImageUpload
+                                    currentImageUrl={formData.avatar}
+                                    onImageChange={(imageUrl) => setFormData(prev => ({ ...prev, avatar: imageUrl }))}
+                                    size="md"
                                 />
                             </div>
 

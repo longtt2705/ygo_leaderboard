@@ -7,7 +7,8 @@ import { Player, Local } from '@/types';
 import { getTierFromElo, generateAvatarUrl } from '@/lib/utils';
 import { ArrowLeft, Plus, Edit, Trash2, Search, Users, Save, X } from 'lucide-react';
 import Link from 'next/link';
-import Image from 'next/image';
+import { UniversalImage } from '@/components/UniversalImage';
+import { ImageUpload } from '@/components/ImageUpload';
 
 export default function PlayersManagementPage() {
     return (
@@ -281,12 +282,13 @@ function PlayersManagement() {
                                         <tr key={player.id} className="hover:bg-slate-700/20">
                                             <td className="px-6 py-4 whitespace-nowrap">
                                                 <div className="flex items-center">
-                                                    <Image
+                                                    <UniversalImage
                                                         className="h-10 w-10 rounded-full"
-                                                        src={player.avatar || 'https://via.placeholder.com/150'}
+                                                        src={player.avatar || ''}
                                                         alt={player.name}
                                                         width={40}
                                                         height={40}
+                                                        playerName={player.name}
                                                     />
                                                     <div className="ml-4">
                                                         <div className="text-sm font-medium text-white">{player.name}</div>
@@ -416,14 +418,12 @@ function PlayersManagement() {
 
                             <div>
                                 <label className="block text-sm font-medium text-slate-300 mb-2">
-                                    Avatar URL (optional)
+                                    Avatar (optional)
                                 </label>
-                                <input
-                                    type="url"
-                                    value={formData.avatar}
-                                    onChange={(e) => setFormData(prev => ({ ...prev, avatar: e.target.value }))}
-                                    className="w-full px-3 py-2 bg-slate-700/50 border border-slate-600 rounded-lg text-white focus:border-blue-500 focus:outline-none"
-                                    placeholder="https://example.com/avatar.jpg"
+                                <ImageUpload
+                                    currentImageUrl={formData.avatar}
+                                    onImageChange={(imageUrl) => setFormData(prev => ({ ...prev, avatar: imageUrl }))}
+                                    size="md"
                                 />
                             </div>
 

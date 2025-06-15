@@ -116,18 +116,48 @@ export function getKFactor(elo: number, matchesPlayed: number): number {
   return 32;
 }
 
-// Generate random avatar URL (placeholder)
+// Generate random avatar URL (using reliable fallback)
 export function generateAvatarUrl(playerId: string): string {
-  const avatars = [
-    "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=150&h=150&fit=crop&crop=face",
-    "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=150&h=150&fit=crop&crop=face",
-    "https://images.unsplash.com/photo-1599566150163-29194dcaad36?w=150&h=150&fit=crop&crop=face",
-    "https://images.unsplash.com/photo-1527980965255-d3b416303d12?w=150&h=150&fit=crop&crop=face",
-    "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=150&h=150&fit=crop&crop=face",
+  // Instead of using external URLs that might timeout, use our reliable fallback
+  const playerName = `Player ${playerId}`;
+  return generateDefaultAvatar(playerName, 150);
+}
+
+// Generate a data URL for a default avatar (no external dependencies)
+export function generateDefaultAvatar(name: string, size: number = 150): string {
+  const initial = name.charAt(0).toUpperCase();
+  const colors = [
+    '#3B82F6', // blue
+    '#8B5CF6', // purple
+    '#10B981', // emerald
+    '#F59E0B', // amber
+    '#EF4444', // red
+    '#06B6D4', // cyan
+    '#84CC16', // lime
+    '#F97316', // orange
   ];
   
-  const index = parseInt(playerId.slice(-1), 16) % avatars.length;
-  return avatars[index];
+  const colorIndex = name.charCodeAt(0) % colors.length;
+  const bgColor = colors[colorIndex];
+  
+  const svg = `
+    <svg width="${size}" height="${size}" viewBox="0 0 ${size} ${size}" xmlns="http://www.w3.org/2000/svg">
+      <rect width="${size}" height="${size}" fill="${bgColor}" rx="${size / 8}"/>
+      <text x="50%" y="50%" text-anchor="middle" dy="0.35em" fill="white" font-family="system-ui, -apple-system, sans-serif" font-size="${size * 0.4}" font-weight="600">
+        ${initial}
+      </text>
+    </svg>
+  `;
+  
+  return `data:image/svg+xml;base64,${btoa(svg)}`;
+}
+
+// Get a reliable fallback avatar
+export function getReliableAvatarUrl(avatar: string | undefined, name: string, size: number = 150): string {
+  if (avatar && avatar.trim() && !avatar.includes('via.placeholder.com')) {
+    return avatar;
+  }
+  return generateDefaultAvatar(name, size);
 }
 
 // Sort players by ELO (descending) and assign ranks

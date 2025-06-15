@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { ProtectedRoute } from '@/components/auth/ProtectedRoute';
 import { seedDatabase } from '@/lib/seedData';
 import { syncPlayerStats } from '@/lib/firebaseService';
-import { Database, Users, Swords, MapPin, Plus, Loader2 } from 'lucide-react';
+import { Database, Users, Swords, MapPin, Plus, Loader2, RefreshCw } from 'lucide-react';
 import Link from 'next/link';
 
 export default function AdminPage() {
@@ -190,6 +190,15 @@ function AdminDashboard() {
                                     <Database className="h-8 w-8 text-orange-400 mb-3 group-hover:scale-110 transition-transform" />
                                     <h3 className="font-semibold text-white mb-1">Add Archetype</h3>
                                     <p className="text-slate-400 text-sm">Create a new deck archetype</p>
+                                </Link>
+
+                                <Link
+                                    href="/admin/cleanup-avatars"
+                                    className="p-6 bg-slate-700/30 rounded-lg border border-slate-600/50 hover:border-slate-500/50 transition-colors group"
+                                >
+                                    <RefreshCw className="h-8 w-8 text-red-400 mb-3 group-hover:scale-110 transition-transform" />
+                                    <h3 className="font-semibold text-white mb-1">Cleanup Avatars</h3>
+                                    <p className="text-slate-400 text-sm">Fix placeholder URL timeout errors</p>
                                 </Link>
                             </div>
                         </div>
