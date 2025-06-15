@@ -17,7 +17,7 @@ export function TopPlayer({ player, localMap }: TopPlayerProps) {
 
     return (
         <Link href={`/player/${player.id}`}>
-            <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-slate-700 via-slate-800 to-slate-900 p-8 text-white shadow-2xl border border-slate-600/50 cursor-pointer hover:scale-105 transition-transform duration-300">
+            <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-slate-700 via-slate-800 to-slate-900 p-4 sm:p-6 lg:p-8 text-white shadow-2xl border border-slate-600/50 cursor-pointer hover:scale-105 transition-transform duration-300">
                 {/* Boss Monster Background */}
                 {bossMonsterImage && (
                     <div
@@ -26,9 +26,9 @@ export function TopPlayer({ player, localMap }: TopPlayerProps) {
                     />
                 )}
 
-                {/* Boss Monster Image on Right */}
+                {/* Boss Monster Image on Right - Hidden on mobile */}
                 {bossMonsterImage && (
-                    <div className="absolute right-0 top-0 bottom-0 w-1/3 overflow-hidden">
+                    <div className="hidden lg:block absolute right-0 top-0 bottom-0 w-1/3 overflow-hidden">
                         <div
                             className="absolute inset-0 bg-cover bg-center opacity-60 blur-sm scale-110"
                             style={{ backgroundImage: `url(${bossMonsterImage})` }}
@@ -94,77 +94,79 @@ export function TopPlayer({ player, localMap }: TopPlayerProps) {
                 {/* Content */}
                 <div className="relative z-10">
                     {/* Rank Badge */}
-                    <div className="mb-6 flex items-center justify-between">
+                    <div className="mb-4 sm:mb-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
                         <div className="flex items-center gap-3">
-                            <div className="flex h-16 w-16 items-center justify-center rounded-full bg-gradient-to-br from-yellow-400 to-orange-500 backdrop-blur-sm shadow-lg">
-                                <Crown className="h-8 w-8 text-white" />
+                            <div className="flex h-12 w-12 sm:h-16 sm:w-16 items-center justify-center rounded-full bg-gradient-to-br from-yellow-400 to-orange-500 backdrop-blur-sm shadow-lg">
+                                <Crown className="h-6 w-6 sm:h-8 sm:w-8 text-white" />
                             </div>
                             <div>
-                                <div className="text-6xl font-black">1</div>
-                                <div className="text-sm font-medium opacity-90">RANK</div>
+                                <div className="text-4xl sm:text-5xl lg:text-6xl font-black">1</div>
+                                <div className="text-xs sm:text-sm font-medium opacity-90">RANK</div>
                             </div>
                         </div>
 
                         {/* Tier Badge */}
-                        <div className={`rounded-lg bg-gradient-to-r ${getTierColor(player.tier)} px-4 py-2 text-sm font-bold uppercase text-white shadow-lg`}>
-                            <Trophy className="mr-2 inline h-4 w-4" />
+                        <div className={`rounded-lg bg-gradient-to-r ${getTierColor(player.tier)} px-3 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm font-bold uppercase text-white shadow-lg w-fit`}>
+                            <Trophy className="mr-1 sm:mr-2 inline h-3 w-3 sm:h-4 sm:w-4" />
                             {player.tier}
                         </div>
                     </div>
 
                     {/* Player Info */}
-                    <div className="mb-6 flex items-center gap-4">
-                        <Avatar className="h-20 w-20 border-4 border-white/30">
+                    <div className="mb-4 sm:mb-6 flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4">
+                        <Avatar className="h-16 w-16 sm:h-20 sm:w-20 border-4 border-white/30 mx-auto sm:mx-0">
                             <AvatarImage src={player.avatar} alt={player.name} />
-                            <AvatarFallback className="bg-white/20 text-2xl font-bold">
+                            <AvatarFallback className="bg-white/20 text-xl sm:text-2xl font-bold">
                                 {player.name.charAt(0).toUpperCase()}
                             </AvatarFallback>
                         </Avatar>
 
-                        <div>
-                            <div className="flex items-center gap-3">
-                                <h1 className="text-3xl font-bold">{player.name}</h1>
+                        <div className="text-center sm:text-left">
+                            <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3">
+                                <h1 className="text-2xl sm:text-3xl font-bold">{player.name}</h1>
                                 {player.streak !== 0 && (
-                                    <div className="flex items-center gap-1">
+                                    <div className="flex items-center justify-center sm:justify-start gap-1">
                                         {player.streak > 0 ? (
                                             <>
-                                                <Flame className="h-5 w-5 text-orange-400" />
+                                                <Flame className="h-4 w-4 sm:h-5 sm:w-5 text-orange-400" />
                                                 <span className="text-sm font-bold text-orange-300">{player.streak}</span>
                                             </>
                                         ) : (
                                             <>
-                                                <Snowflake className="h-5 w-5 text-blue-400" />
+                                                <Snowflake className="h-4 w-4 sm:h-5 sm:w-5 text-blue-400" />
                                                 <span className="text-sm font-bold text-blue-300">{Math.abs(player.streak)}</span>
                                             </>
                                         )}
                                     </div>
                                 )}
                             </div>
-                            <div className="flex items-center gap-4 text-lg">
-                                <span className="flex items-center gap-1">
+                            <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4 text-base sm:text-lg mt-2">
+                                <span className="flex items-center justify-center sm:justify-start gap-1">
                                     <Swords className="h-4 w-4" />
                                     {mainDeck}
                                 </span>
-                                <LocalBadges localIds={player.locals} localMap={localMap} />
+                                <div className="flex justify-center sm:justify-start">
+                                    <LocalBadges localIds={player.locals} localMap={localMap} />
+                                </div>
                             </div>
                         </div>
                     </div>
 
                     {/* Stats Grid */}
-                    <div className="grid grid-cols-3 gap-6">
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-6">
                         <div className="text-center">
-                            <div className="text-3xl font-black">{formatElo(player.elo)}</div>
-                            <div className="text-sm opacity-80">Yu-Gi-Oh Points</div>
+                            <div className="text-2xl sm:text-3xl font-black">{formatElo(player.elo)}</div>
+                            <div className="text-xs sm:text-sm opacity-80">Yu-Gi-Oh Points</div>
                         </div>
 
                         <div className="text-center">
-                            <div className="text-3xl font-black">{formatRecord(player.wins, player.losses)}</div>
-                            <div className="text-sm opacity-80">Win Rate: {player.winRate}%</div>
+                            <div className="text-2xl sm:text-3xl font-black">{formatRecord(player.wins, player.losses)}</div>
+                            <div className="text-xs sm:text-sm opacity-80">Win Rate: {player.winRate}%</div>
                         </div>
 
                         <div className="text-center">
-                            <div className="text-3xl font-black">{player.totalMatches}</div>
-                            <div className="text-sm opacity-80">Total Matches</div>
+                            <div className="text-2xl sm:text-3xl font-black">{player.totalMatches}</div>
+                            <div className="text-xs sm:text-sm opacity-80">Total Matches</div>
                         </div>
                     </div>
 

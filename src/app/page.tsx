@@ -147,53 +147,53 @@ export default function Home() {
 
         {/* Header */}
         <header className="border-b border-slate-700/50 bg-slate-900/50 backdrop-blur-sm">
-          <div className="mx-auto max-w-7xl px-6 py-8">
-            <div className="flex items-center justify-between">
+          <div className="mx-auto max-w-7xl px-4 sm:px-6 py-4 sm:py-8">
+            <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 lg:gap-0">
               <div>
-                <div className="flex items-center gap-3 mb-2">
-                  <h1 className="text-4xl font-black text-white">
+                <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3 mb-2">
+                  <h1 className="text-2xl sm:text-3xl lg:text-4xl font-black text-white">
                     Yu-Gi-Oh! <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-purple-600">Leaderboard</span>
                   </h1>
-                  <div className="flex items-center gap-2 px-3 py-1 bg-green-500/10 border border-green-500/30 rounded-full">
+                  <div className="flex items-center gap-2 px-3 py-1 bg-green-500/10 border border-green-500/30 rounded-full w-fit">
                     <div className="h-2 w-2 rounded-full bg-green-400 animate-pulse" />
                     <span className="text-green-400 text-sm font-medium">LIVE</span>
                   </div>
                 </div>
-                <p className="text-lg text-slate-400">
+                <p className="text-base sm:text-lg text-slate-400">
                   Competitive rankings for local duelists
                 </p>
               </div>
 
-              {/* Stats Summary */}
-              <div className="hidden lg:flex items-center gap-8">
+              {/* Stats Summary - Mobile First */}
+              <div className="grid grid-cols-3 lg:flex lg:items-center gap-4 lg:gap-8">
                 <div className="text-center">
-                  <div className="flex items-center gap-2 text-2xl font-bold text-white">
-                    <Users className="h-6 w-6 text-blue-400" />
-                    {totalPlayers}
+                  <div className="flex flex-col lg:flex-row lg:items-center gap-1 lg:gap-2 text-lg sm:text-xl lg:text-2xl font-bold text-white">
+                    <Users className="h-5 w-5 lg:h-6 lg:w-6 text-blue-400 mx-auto lg:mx-0" />
+                    <span>{totalPlayers}</span>
                   </div>
-                  <div className="text-sm text-slate-400">Total Players</div>
+                  <div className="text-xs sm:text-sm text-slate-400">Total Players</div>
                 </div>
 
                 <div className="text-center">
-                  <div className="flex items-center gap-2 text-2xl font-bold text-white">
-                    <Swords className="h-6 w-6 text-green-400" />
-                    {totalMatches}
+                  <div className="flex flex-col lg:flex-row lg:items-center gap-1 lg:gap-2 text-lg sm:text-xl lg:text-2xl font-bold text-white">
+                    <Swords className="h-5 w-5 lg:h-6 lg:w-6 text-green-400 mx-auto lg:mx-0" />
+                    <span>{totalMatches}</span>
                   </div>
-                  <div className="text-sm text-slate-400">Total Matches</div>
+                  <div className="text-xs sm:text-sm text-slate-400">Total Matches</div>
                 </div>
 
                 <div className="text-center">
-                  <div className="flex items-center gap-2 text-2xl font-bold text-white">
-                    <BarChart3 className="h-6 w-6 text-purple-400" />
-                    {averageElo}
+                  <div className="flex flex-col lg:flex-row lg:items-center gap-1 lg:gap-2 text-lg sm:text-xl lg:text-2xl font-bold text-white">
+                    <BarChart3 className="h-5 w-5 lg:h-6 lg:w-6 text-purple-400 mx-auto lg:mx-0" />
+                    <span>{averageElo}</span>
                   </div>
-                  <div className="text-sm text-slate-400">Avg Rating</div>
+                  <div className="text-xs sm:text-sm text-slate-400">Avg Rating</div>
                 </div>
 
                 <button
                   onClick={handleRefresh}
                   disabled={refreshing}
-                  className="flex items-center gap-2 bg-slate-700 hover:bg-slate-600 disabled:bg-slate-700/50 text-white px-3 py-2 rounded-lg transition-colors"
+                  className="col-span-3 lg:col-span-1 flex items-center justify-center gap-2 bg-slate-700 hover:bg-slate-600 disabled:bg-slate-700/50 text-white px-3 py-2 rounded-lg transition-colors text-sm"
                   title="Refresh data"
                 >
                   <RefreshCw className={`h-4 w-4 ${refreshing ? 'animate-spin' : ''}`} />
@@ -205,14 +205,14 @@ export default function Home() {
         </header>
 
         {/* Main Content */}
-        <main className="mx-auto max-w-7xl px-6 py-8 overflow-visible">
-          <div className="space-y-12">
+        <main className="mx-auto max-w-7xl px-4 sm:px-6 py-4 sm:py-8 overflow-visible">
+          <div className="space-y-8 sm:space-y-12">
             {/* Top Player Section */}
             {topPlayer && (
               <section>
-                <div className="mb-6 flex items-center gap-3">
-                  <Trophy className="h-8 w-8 text-yellow-500" />
-                  <h2 className="text-3xl font-bold text-white">Champion</h2>
+                <div className="mb-4 sm:mb-6 flex items-center gap-2 sm:gap-3">
+                  <Trophy className="h-6 w-6 sm:h-8 sm:w-8 text-yellow-500" />
+                  <h2 className="text-2xl sm:text-3xl font-bold text-white">Champion</h2>
                 </div>
                 <TopPlayer player={topPlayer} localMap={localMap} />
               </section>
@@ -221,9 +221,9 @@ export default function Home() {
             {/* Featured Players Section */}
             {featuredPlayers.length > 0 && (
               <section className="overflow-visible">
-                <div className="mb-6 flex items-center gap-3">
-                  <Users className="h-8 w-8 text-blue-400" />
-                  <h2 className="text-3xl font-bold text-white">Top Contenders</h2>
+                <div className="mb-4 sm:mb-6 flex items-center gap-2 sm:gap-3">
+                  <Users className="h-6 w-6 sm:h-8 sm:w-8 text-blue-400" />
+                  <h2 className="text-2xl sm:text-3xl font-bold text-white">Top Contenders</h2>
                 </div>
                 <div className="pb-6">
                   <FeaturedPlayers players={featuredPlayers} localMap={localMap} />
@@ -234,15 +234,15 @@ export default function Home() {
             {/* Leaderboard Table Section */}
             {leaderboardPlayers.length > 0 && (
               <section>
-                <div className="mb-6 flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    <BarChart3 className="h-8 w-8 text-purple-400" />
-                    <h2 className="text-3xl font-bold text-white">Full Rankings</h2>
+                <div className="mb-4 sm:mb-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                  <div className="flex items-center gap-2 sm:gap-3">
+                    <BarChart3 className="h-6 w-6 sm:h-8 sm:w-8 text-purple-400" />
+                    <h2 className="text-2xl sm:text-3xl font-bold text-white">Full Rankings</h2>
                   </div>
 
-                  <div className="flex items-center gap-4 text-sm text-slate-400">
+                  <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4 text-sm text-slate-400">
                     <span>Showing ranks 6-{leaderboardPlayers.length + 5}</span>
-                    <div className="h-4 w-px bg-slate-600" />
+                    <div className="hidden sm:block h-4 w-px bg-slate-600" />
                     <div className="flex items-center gap-2">
                       <div className="h-2 w-2 rounded-full bg-green-400 animate-pulse" />
                       <span>Live Updates</span>
@@ -256,10 +256,10 @@ export default function Home() {
         </main>
 
         {/* Footer */}
-        <footer className="border-t border-slate-700/50 bg-slate-900/50 backdrop-blur-sm mt-16">
-          <div className="mx-auto max-w-7xl px-6 py-8">
-            <div className="flex items-center justify-between">
-              <div className="text-slate-400">
+        <footer className="border-t border-slate-700/50 bg-slate-900/50 backdrop-blur-sm mt-8 sm:mt-16">
+          <div className="mx-auto max-w-7xl px-4 sm:px-6 py-4 sm:py-8">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+              <div className="text-slate-400 text-sm">
                 <p>&copy; 2024 Yu-Gi-Oh! Local Leaderboard. Built with Next.js & Tailwind CSS.</p>
               </div>
 
