@@ -21,14 +21,16 @@ function FeaturedPlayerCard({ player, localMap }: FeaturedPlayerCardProps) {
 
     const getRankColor = (rank: number) => {
         switch (rank) {
+            case 1:
+                return "from-yellow-400 to-yellow-600"; // Gold for 1st place
             case 2:
-                return "from-gray-300 to-gray-500"; // Silver
+                return "from-gray-300 to-gray-500"; // Silver for 2nd place
             case 3:
-                return "from-amber-400 to-amber-600"; // Bronze  
+                return "from-amber-400 to-amber-600"; // Bronze for 3rd place
             case 4:
-                return "from-blue-400 to-blue-600"; // Blue
+                return "from-gray-600 to-gray-800"; // Iron color
             case 5:
-                return "from-green-400 to-green-600"; // Green
+                return "from-amber-800 to-yellow-900"; // Wood color
             default:
                 return "from-gray-400 to-gray-600";
         }

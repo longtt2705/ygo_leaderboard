@@ -56,6 +56,8 @@ export interface MatchHistory {
 }
 
 export enum PlayerTier {
+  WOOD = 'wood',
+  IRON = 'iron',
   BRONZE = 'bronze',
   SILVER = 'silver',
   GOLD = 'gold',

@@ -60,7 +60,9 @@ export function getTierFromElo(elo: number): PlayerTier {
   if (elo >= 1600) return PlayerTier.PLATINUM;    // 1600-1799 YP
   if (elo >= 1400) return PlayerTier.GOLD;        // 1400-1599 YP
   if (elo >= 1200) return PlayerTier.SILVER;      // 1200-1399 YP
-  return PlayerTier.BRONZE;                       // 1000-1199 YP
+  if (elo >= 1000) return PlayerTier.BRONZE;      // 1000-1199 YP
+  if (elo >= 800) return PlayerTier.IRON;         // 800-999 YP
+  return PlayerTier.WOOD;                         // <800 YP
 }
 
 // Get tier color
@@ -82,6 +84,10 @@ export function getTierColor(tier: PlayerTier): string {
       return "from-gray-400 to-gray-600";
     case PlayerTier.BRONZE:
       return "from-amber-600 to-amber-800";
+    case PlayerTier.IRON:
+      return "from-gray-600 to-gray-800";
+    case PlayerTier.WOOD:
+      return "from-amber-800 to-yellow-900";
     default:
       return "from-gray-400 to-gray-600";
   }

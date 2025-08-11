@@ -136,10 +136,11 @@ function PlayersManagement() {
                 }],
                 mainDeck: formData.mainDeck,
                 totalMatches,
-                streak: 0,
-                peakElo: formData.elo,
-                recentMatches: [],
-                rank: 0 // Will be calculated when fetched
+                // Preserve existing fields when editing, use defaults for new players
+                streak: editingPlayer ? editingPlayer.streak : 0,
+                peakElo: editingPlayer ? Math.max(editingPlayer.peakElo, formData.elo) : formData.elo,
+                recentMatches: editingPlayer ? editingPlayer.recentMatches : [],
+                rank: editingPlayer ? editingPlayer.rank : 0 // Will be calculated when fetched
             };
 
             if (editingPlayer) {
