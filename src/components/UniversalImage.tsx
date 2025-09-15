@@ -70,7 +70,7 @@ export function UniversalImage({
             img.onload = null;
             img.onerror = null;
         };
-    }, [src, playerName, fallbackInitial, alt, width, height]);
+    }, [src, playerName, fallbackInitial, alt, width, height, generateFallback, unreliableDomains]);
 
     const handleImageError = () => {
         if (!hasError) {

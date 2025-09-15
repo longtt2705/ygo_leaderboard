@@ -52,7 +52,7 @@ export function SafeImage({ src, alt, width, height, className, playerName }: Sa
             setImageSrc(src);
             setUseUnoptimized(!isConfigured); // Use unoptimized for external domains
         }
-    }, [src, alt, playerName, width, height]);
+    }, [src, alt, playerName, width, height, configuredDomains, unreliableDomains]);
 
     const handleError = () => {
         if (!hasError) {

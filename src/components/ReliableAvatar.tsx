@@ -40,7 +40,7 @@ export function ReliableAvatar({
         } else {
             setAvatarSrc(src);
         }
-    }, [src]);
+    }, [src, unreliableDomains]);
 
     const handleError = () => {
         if (!hasError) {

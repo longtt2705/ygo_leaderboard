@@ -303,7 +303,7 @@ function AdminDashboard() {
                                 <div className="p-4 bg-slate-700/30 rounded-lg border border-slate-600/50">
                                     <h3 className="font-semibold text-white mb-2">Start New Season</h3>
                                     <p className="text-slate-400 text-sm mb-4">
-                                        Start a new season by saving current stats as "last season" data and resetting current stats to defaults.
+                                        Start a new season by saving current stats as &quot;last season&quot; data and resetting current stats to defaults.
                                         This preserves historical achievements while starting fresh.
                                         <span className="block mt-1 text-blue-400 font-medium">💡 Recommended for season transitions</span>
                                     </p>
@@ -563,7 +563,7 @@ function AdminDashboard() {
 
                         <div className="space-y-4">
                             <div className="bg-blue-500/10 border border-blue-500/30 rounded-lg p-4">
-                                <h3 className="text-blue-400 font-semibold mb-2">This will save current stats as "Last Season":</h3>
+                                <h3 className="text-blue-400 font-semibold mb-2">This will save current stats as &quot;Last Season&quot;:</h3>
                                 <ul className="text-sm text-slate-300 space-y-1">
                                     <li>• Current ELO → Last Season ELO</li>
                                     <li>• Current Peak ELO → Last Season Peak ELO</li>

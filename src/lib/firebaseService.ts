@@ -617,9 +617,9 @@ export async function getAllSnapshots(): Promise<Snapshot[]> {
         startDate: data.startDate.toDate(),
         endDate: data.endDate.toDate(),
         createdAt: data.createdAt.toDate(),
-        players: data.players?.map((player: any) => ({
+        players: data.players?.map((player: Player & { recentMatches: (Match & { date: Timestamp })[] }) => ({
           ...player,
-          recentMatches: player.recentMatches?.map((match: any) => ({
+          recentMatches: player.recentMatches?.map((match: Match & { date: Timestamp }) => ({
             ...match,
             date: match.date.toDate()
           })) || []
@@ -645,9 +645,9 @@ export async function getSnapshot(snapshotId: string): Promise<Snapshot | null> 
         startDate: data.startDate.toDate(),
         endDate: data.endDate.toDate(),
         createdAt: data.createdAt.toDate(),
-        players: data.players?.map((player: any) => ({
+        players: data.players?.map((player: Player & { recentMatches: (Match & { date: Timestamp })[] }) => ({
           ...player,
-          recentMatches: player.recentMatches?.map((match: any) => ({
+          recentMatches: player.recentMatches?.map((match: Match & { date: Timestamp }) => ({
             ...match,
             date: match.date.toDate()
           })) || []
@@ -687,7 +687,6 @@ export async function resetAllPlayersToDefault(): Promise<void> {
     const defaultWinRate = 0;
     const defaultTotalMatches = 0;
     const defaultStreak = 0;
-    const defaultRank = 0;
     const defaultRecentMatches: Match[] = [];
 
     // Update all players with default values, but preserve last season data

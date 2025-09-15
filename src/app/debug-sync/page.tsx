@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { getAllPlayers, getAllMatches } from '@/lib/firebaseService';
 import { Player, Match } from '@/types';
 import Link from 'next/link';
@@ -18,11 +18,7 @@ export default function DebugSyncPage() {
         }
     }>({});
 
-    useEffect(() => {
-        loadData();
-    }, []);
-
-    const loadData = async () => {
+    const loadData = useCallback(async () => {
         try {
             const [playersData, matchesData] = await Promise.all([
                 getAllPlayers(),
@@ -104,7 +100,11 @@ export default function DebugSyncPage() {
         } finally {
             setLoading(false);
         }
-    };
+    }, []);
+
+    useEffect(() => {
+        loadData();
+    }, [loadData]);
 
     if (loading) {
         return (
