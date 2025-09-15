@@ -57,7 +57,8 @@ export function getTierFromElo(elo: number): PlayerTier {
   if (elo >= 2200) return PlayerTier.GRANDMASTER; // 2200-2399 YP
   if (elo >= 2000) return PlayerTier.MASTER;      // 2000-2199 YP
   if (elo >= 1800) return PlayerTier.DIAMOND;     // 1800-1999 YP
-  if (elo >= 1600) return PlayerTier.PLATINUM;    // 1600-1799 YP
+  if (elo >= 1700) return PlayerTier.EMERALD;     // 1700-1799 YP
+  if (elo >= 1600) return PlayerTier.PLATINUM;    // 1600-1699 YP
   if (elo >= 1400) return PlayerTier.GOLD;        // 1400-1599 YP
   if (elo >= 1200) return PlayerTier.SILVER;      // 1200-1399 YP
   if (elo >= 1000) return PlayerTier.BRONZE;      // 1000-1199 YP
@@ -76,6 +77,8 @@ export function getTierColor(tier: PlayerTier): string {
       return "from-blue-500 to-purple-500";
     case PlayerTier.DIAMOND:
       return "from-cyan-500 to-blue-500";
+    case PlayerTier.EMERALD:
+      return "from-emerald-500 to-green-500";
     case PlayerTier.PLATINUM:
       return "from-green-500 to-cyan-500";
     case PlayerTier.GOLD:

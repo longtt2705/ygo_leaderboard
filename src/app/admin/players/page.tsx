@@ -140,7 +140,11 @@ function PlayersManagement() {
                 streak: editingPlayer ? editingPlayer.streak : 0,
                 peakElo: editingPlayer ? Math.max(editingPlayer.peakElo, formData.elo) : formData.elo,
                 recentMatches: editingPlayer ? editingPlayer.recentMatches : [],
-                rank: editingPlayer ? editingPlayer.rank : 0 // Will be calculated when fetched
+                rank: editingPlayer ? editingPlayer.rank : 0, // Will be calculated when fetched
+                // Preserve last season data when editing, undefined for new players
+                lastSeasonElo: editingPlayer ? editingPlayer.lastSeasonElo : undefined,
+                lastSeasonPeakElo: editingPlayer ? editingPlayer.lastSeasonPeakElo : undefined,
+                lastSeasonRank: editingPlayer ? editingPlayer.lastSeasonRank : undefined
             };
 
             if (editingPlayer) {

@@ -1,9 +1,10 @@
-import { Player } from "@/types";
+import { Player, PlayerTier } from "@/types";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { LocalBadges } from "@/components/LocalBadges";
-import { getTierColor, formatElo } from "@/lib/utils";
+import { getTierColor, formatElo, getTierFromElo } from "@/lib/utils";
 import { Medal, TrendingUp, TrendingDown } from "lucide-react";
 import Link from "next/link";
+import Image from "next/image";
 
 interface LeaderboardTableProps {
     players: Player[];
@@ -28,13 +29,25 @@ function LeaderboardRow({ player, localMap }: LeaderboardRowProps) {
             {/* Player */}
             <td className="px-3 sm:px-6 py-3 sm:py-4">
                 <Link href={`/player/${player.id}`} className="flex items-center gap-2 sm:gap-3 hover:opacity-80 transition-opacity">
-                    <Avatar className="h-8 w-8 sm:h-10 sm:w-10 border-2 border-slate-600/50">
-                        <AvatarImage src={player.avatar} alt={player.name} />
-                        <AvatarFallback className="bg-slate-700 text-white font-bold text-xs sm:text-sm">
-                            {player.name.charAt(0).toUpperCase()}
-                        </AvatarFallback>
-                    </Avatar>
-                    <div>
+                    <div className="relative mx-auto sm:mx-0">
+                        <Avatar className="h-8 w-8 sm:h-10 sm:w-10 border-2 border-slate-600/50">
+                            <AvatarImage src={player.avatar} alt={player.name} />
+                            <AvatarFallback className="bg-slate-700 text-white font-bold text-xs sm:text-sm">
+                                {player.name.charAt(0).toUpperCase()}
+                            </AvatarFallback>
+                        </Avatar>
+                        {getTierFromElo(player.lastSeasonElo || 0) !== PlayerTier.WOOD &&
+                            (<div className="absolute inset-0 top-[20%] left-[50%] -translate-x-[50%] -translate-y-[50%] pointer-events-none">
+                                <Image
+                                    src={`/${getTierFromElo(player.lastSeasonElo || 0).toString().toLowerCase()}.webp`}
+                                    alt={`${getTierFromElo(player.lastSeasonElo || 0).toString().toLowerCase()} Frame`}
+                                    width={120}
+                                    height={120}
+                                    className="w-full h-full object-contain scale-550"
+                                />
+                            </div>)}
+                    </div>
+                    <div className="text-center sm:text-left pl-2">
                         <div className="font-semibold text-white hover:text-blue-400 transition-colors text-sm sm:text-base">{player.name}</div>
                         <div className="text-xs sm:text-sm text-slate-400 hidden sm:block">{player.mainDeck || player.decks.find(d => d.isMain)?.archetypeName || 'No Deck'}</div>
                     </div>
@@ -110,20 +123,33 @@ function LeaderboardRow({ player, localMap }: LeaderboardRowProps) {
 function LeaderboardCard({ player, localMap }: LeaderboardRowProps) {
     return (
         <Link href={`/player/${player.id}`}>
-            <div className="bg-slate-800/30 hover:bg-slate-700/50 border border-slate-700/50 rounded-lg p-4 transition-colors duration-200">
-                <div className="flex items-center gap-3 mb-3">
-                    <div className="flex items-center gap-2">
-                        <span className="text-xl font-bold text-slate-300">#{player.rank}</span>
+            <div className="bg-slate-800/30 hover:bg-slate-700/50 border border-slate-700/50 rounded-lg p-4 transition-colors duration-200 my-4">
+                <div className="flex items-center gap-2">
+                    <span className="text-xl font-bold text-slate-300">#{player.rank}</span>
+                </div>
+                <div className="flex items-center mb-3">
+                    <div className="relative mx-auto sm:mx-0">
+                        <Avatar className="h-10 w-10 border-2 border-slate-600/50">
+                            <AvatarImage src={player.avatar} alt={player.name} />
+                            <AvatarFallback className="bg-slate-700 text-white font-bold">
+                                {player.name.charAt(0).toUpperCase()}
+                            </AvatarFallback>
+                        </Avatar>
+                        {getTierFromElo(player.lastSeasonElo || 0) !== PlayerTier.WOOD &&
+                            (<div className="absolute inset-0 top-[20%] left-[50%] -translate-x-[50%] -translate-y-[50%] pointer-events-none">
+                                <Image
+                                    src={`/${getTierFromElo(player.lastSeasonElo || 0).toString().toLowerCase()}.webp`}
+                                    alt={`${getTierFromElo(player.lastSeasonElo || 0).toString().toLowerCase()} Frame`}
+                                    width={120}
+                                    height={120}
+                                    className="w-full h-full object-contain scale-550"
+                                />
+                            </div>)}
                     </div>
+                </div>
+                <div className="flex flex-col gap-2 items-center justify-between">
 
-                    <Avatar className="h-10 w-10 border-2 border-slate-600/50">
-                        <AvatarImage src={player.avatar} alt={player.name} />
-                        <AvatarFallback className="bg-slate-700 text-white font-bold">
-                            {player.name.charAt(0).toUpperCase()}
-                        </AvatarFallback>
-                    </Avatar>
-
-                    <div className="flex-1 min-w-0">
+                    <div className="flex-1 min-w-0 text-center">
                         <div className="font-semibold text-white hover:text-blue-400 transition-colors">{player.name}</div>
                         <div className="text-sm text-slate-400">{player.mainDeck || player.decks.find(d => d.isMain)?.archetypeName || 'No Deck'}</div>
                     </div>
@@ -163,7 +189,7 @@ function LeaderboardCard({ player, localMap }: LeaderboardRowProps) {
                     </div>
                 </div>
 
-                <div className="mt-3">
+                <div className="mt-3 text-center">
                     <LocalBadges localIds={player.locals} localMap={localMap} className="text-xs" />
                 </div>
 

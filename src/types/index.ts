@@ -22,6 +22,10 @@ export interface Player {
   streak: number; // Current win/loss streak
   peakElo: number;
   recentMatches: Match[];
+  // Last season statistics
+  lastSeasonElo?: number; // ELO from previous season
+  lastSeasonPeakElo?: number; // Peak ELO achieved in previous season
+  lastSeasonRank?: number; // Final rank from previous season
 }
 
 export interface Match {
@@ -62,6 +66,7 @@ export enum PlayerTier {
   SILVER = 'silver',
   GOLD = 'gold',
   PLATINUM = 'platinum',
+  EMERALD = 'emerald',
   DIAMOND = 'diamond',
   MASTER = 'master',
   GRANDMASTER = 'grandmaster',
@@ -107,4 +112,20 @@ export interface DeckArchetype {
   bossMonsterImageUrl?: string; // Boss monster image for background
   createdAt?: Date;
   updatedAt?: Date;
+}
+
+export interface Snapshot {
+  id: string;
+  name: string;
+  startDate: Date;
+  endDate: Date;
+  createdAt: Date;
+  totalPlayers: number;
+  players: Player[]; // Full player data at the time of snapshot
+  metadata?: {
+    averageElo: number;
+    topPlayerElo: number;
+    totalMatches: number;
+    mostPlayedDeck: string;
+  };
 } 
