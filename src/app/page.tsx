@@ -34,7 +34,7 @@ export default function Home() {
           setPlayers(prevPlayers => {
             // Only update if we're viewing live data
             if (selectedSnapshot === 'live') {
-              return updatedPlayers.sort((a, b) => a.elo === b.elo ? (a.lastSeasonRank || 0) - (b.lastSeasonRank || 0) : a.elo - b.elo).map((player, index) => ({
+              return updatedPlayers.sort((a, b) => a.elo === b.elo ? (a.lastSeasonRank || 0) - (b.lastSeasonRank || 0) : b.elo - a.elo).map((player, index) => ({
                 ...player,
                 rank: index + 1
               }));
