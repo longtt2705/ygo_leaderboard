@@ -120,7 +120,7 @@ function PlayersManagement() {
             const tier = getTierFromElo(formData.elo);
             const avatar = formData.avatar || generateAvatarUrl(formData.name);
 
-            const playerData = {
+            const playerData: any = {
                 name: formData.name,
                 avatar,
                 elo: formData.elo,
@@ -140,12 +140,15 @@ function PlayersManagement() {
                 streak: editingPlayer ? editingPlayer.streak : 0,
                 peakElo: editingPlayer ? Math.max(editingPlayer.peakElo, formData.elo) : formData.elo,
                 recentMatches: editingPlayer ? editingPlayer.recentMatches : [],
-                rank: editingPlayer ? editingPlayer.rank : 0, // Will be calculated when fetched
-                // Preserve last season data when editing, undefined for new players
-                lastSeasonElo: editingPlayer ? editingPlayer.lastSeasonElo : undefined,
-                lastSeasonPeakElo: editingPlayer ? editingPlayer.lastSeasonPeakElo : undefined,
-                lastSeasonRank: editingPlayer ? editingPlayer.lastSeasonRank : undefined
+                rank: editingPlayer ? editingPlayer.rank : 0 // Will be calculated when fetched
             };
+
+            // Only include lastSeason fields when editing to avoid Firestore undefined errors
+            if (editingPlayer) {
+                playerData.lastSeasonElo = editingPlayer.lastSeasonElo;
+                playerData.lastSeasonPeakElo = editingPlayer.lastSeasonPeakElo;
+                playerData.lastSeasonRank = editingPlayer.lastSeasonRank;
+            }
 
             if (editingPlayer) {
                 await updatePlayer(editingPlayer.id, playerData);

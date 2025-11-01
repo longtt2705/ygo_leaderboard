@@ -252,11 +252,9 @@ export async function createPlayerProfile(userId: string, playerData: {
     streak: 0,
     peakElo: 1200,
     rank: 0, // Will be calculated when fetched
-    recentMatches: [],
-    // Initialize last season data as undefined (new player)
-    lastSeasonElo: undefined,
-    lastSeasonPeakElo: undefined,
-    lastSeasonRank: undefined
+    recentMatches: []
+    // Don't include lastSeasonElo, lastSeasonPeakElo, lastSeasonRank for new players
+    // They will be undefined/optional and Firestore doesn't accept undefined values
   };
 
   return await createPlayer(newPlayer);
