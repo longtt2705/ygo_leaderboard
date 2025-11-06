@@ -143,11 +143,17 @@ function PlayersManagement() {
                 rank: editingPlayer ? editingPlayer.rank : 0 // Will be calculated when fetched
             };
 
-            // Only include lastSeason fields when editing to avoid Firestore undefined errors
+            // Only include lastSeason fields when editing and they exist to avoid Firestore undefined errors
             if (editingPlayer) {
-                playerData.lastSeasonElo = editingPlayer.lastSeasonElo;
-                playerData.lastSeasonPeakElo = editingPlayer.lastSeasonPeakElo;
-                playerData.lastSeasonRank = editingPlayer.lastSeasonRank;
+                if (editingPlayer.lastSeasonElo !== undefined) {
+                    playerData.lastSeasonElo = editingPlayer.lastSeasonElo;
+                }
+                if (editingPlayer.lastSeasonPeakElo !== undefined) {
+                    playerData.lastSeasonPeakElo = editingPlayer.lastSeasonPeakElo;
+                }
+                if (editingPlayer.lastSeasonRank !== undefined) {
+                    playerData.lastSeasonRank = editingPlayer.lastSeasonRank;
+                }
             }
 
             if (editingPlayer) {
