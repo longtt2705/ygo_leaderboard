@@ -62,11 +62,51 @@ export async function getAllPlayers(): Promise<Player[]> {
     );
     const querySnapshot = await getDocs(q);
     
-    return querySnapshot.docs.map((doc, index) => ({
+    const allPlayers = querySnapshot.docs.map((doc) => ({
       id: doc.id,
-      ...doc.data(),
-      rank: index + 1
+      ...doc.data()
     })) as Player[];
+    
+    // Separate ranked and unranked players
+    const rankedPlayers = allPlayers.filter(p => p.totalMatches > 5);
+    const unrankedPlayers = allPlayers.filter(p => p.totalMatches <= 5);
+    
+    // Sort unranked players by last season rank, then last season ELO, then name
+    const sortedUnranked = unrankedPlayers.sort((a, b) => {
+      // If both have last season rank, sort by it
+      if (a.lastSeasonRank && b.lastSeasonRank) {
+        return a.lastSeasonRank - b.lastSeasonRank;
+      }
+      // If only one has last season rank, that one comes first
+      if (a.lastSeasonRank) return -1;
+      if (b.lastSeasonRank) return 1;
+      
+      // If both have last season ELO, sort by it (higher ELO first)
+      if (a.lastSeasonElo && b.lastSeasonElo) {
+        return b.lastSeasonElo - a.lastSeasonElo;
+      }
+      // If only one has last season ELO, that one comes first
+      if (a.lastSeasonElo) return -1;
+      if (b.lastSeasonElo) return 1;
+      
+      // Neither has last season data, sort alphabetically
+      return a.name.localeCompare(b.name);
+    });
+    
+    // Assign ranks to ranked players only
+    const rankedWithRanks = rankedPlayers.map((player, index) => ({
+      ...player,
+      rank: index + 1
+    }));
+    
+    // Assign rank 0 to unranked players
+    const unrankedWithRanks = sortedUnranked.map((player) => ({
+      ...player,
+      rank: 0
+    }));
+    
+    // Return ranked players first, then unranked
+    return [...rankedWithRanks, ...unrankedWithRanks];
   } catch (error) {
     console.error('Error getting players:', error);
     throw error;
@@ -393,13 +433,22 @@ export async function recalculateRankings(): Promise<void> {
     // Get all players sorted by ELO
     const players = await getAllPlayers();
     
-    // Update each player's rank
-    const updatePromises = players.map((player, index) => 
+    // Separate ranked and unranked players
+    const rankedPlayers = players.filter(p => p.totalMatches > 5);
+    const unrankedPlayers = players.filter(p => p.totalMatches <= 5);
+    
+    // Update ranked players with proper ranks
+    const rankedUpdatePromises = rankedPlayers.map((player, index) => 
       updatePlayer(player.id, { rank: index + 1 })
     );
     
-    await Promise.all(updatePromises);
-    console.log('Rankings recalculated successfully');
+    // Update unranked players with rank 0
+    const unrankedUpdatePromises = unrankedPlayers.map((player) => 
+      updatePlayer(player.id, { rank: 0 })
+    );
+    
+    await Promise.all([...rankedUpdatePromises, ...unrankedUpdatePromises]);
+    console.log(`Rankings recalculated successfully - ${rankedPlayers.length} ranked, ${unrankedPlayers.length} unranked`);
   } catch (error) {
     console.error('Error recalculating rankings:', error);
     throw error;

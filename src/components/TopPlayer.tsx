@@ -108,10 +108,17 @@ export function TopPlayer({ player, localMap }: TopPlayerProps) {
                             </div>
 
                             {/* Tier Badge */}
-                            <div className={`rounded-lg bg-gradient-to-r ${getTierColor(player.tier)} px-3 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm font-bold uppercase text-white shadow-lg w-fit`}>
-                                <Trophy className="mr-1 sm:mr-2 inline h-3 w-3 sm:h-4 sm:w-4" />
-                                {player.tier}
-                            </div>
+                            {player.totalMatches > 5 ? (
+                                <div className={`rounded-lg bg-gradient-to-r ${getTierColor(player.tier)} px-3 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm font-bold uppercase text-white shadow-lg w-fit`}>
+                                    <Trophy className="mr-1 sm:mr-2 inline h-3 w-3 sm:h-4 sm:w-4" />
+                                    {player.tier}
+                                </div>
+                            ) : (
+                                <div className="rounded-lg bg-gradient-to-r from-amber-600 to-amber-800 px-3 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm font-bold uppercase text-white shadow-lg w-fit">
+                                    <Trophy className="mr-1 sm:mr-2 inline h-3 w-3 sm:h-4 sm:w-4" />
+                                    Unranked
+                                </div>
+                            )}
                         </div>
 
                         {/* Player Info */}
@@ -169,8 +176,17 @@ export function TopPlayer({ player, localMap }: TopPlayerProps) {
                         {/* Stats Grid */}
                         <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 sm:gap-6">
                             <div className="text-center">
-                                <div className="text-2xl sm:text-3xl font-black">{formatElo(player.elo)}</div>
-                                <div className="text-xs sm:text-sm opacity-80">Yu-Gi-Oh Points</div>
+                                {player.totalMatches > 5 ? (
+                                    <>
+                                        <div className="text-2xl sm:text-3xl font-black">{formatElo(player.elo)}</div>
+                                        <div className="text-xs sm:text-sm opacity-80">Yu-Gi-Oh Points</div>
+                                    </>
+                                ) : (
+                                    <>
+                                        <div className="text-xl sm:text-2xl font-black text-amber-400">Placement</div>
+                                        <div className="text-xs sm:text-sm opacity-80">{player.totalMatches}/5 matches</div>
+                                    </>
+                                )}
                             </div>
 
                             <div className="text-center">

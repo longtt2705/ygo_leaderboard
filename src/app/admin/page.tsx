@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { ProtectedRoute } from '@/components/auth/ProtectedRoute';
 import { seedDatabase } from '@/lib/seedData';
-import { syncPlayerStats, createSnapshot, resetAllPlayersToDefault, startNewSeason } from '@/lib/firebaseService';
+import { syncPlayerStats, createSnapshot, resetAllPlayersToDefault, startNewSeason, getAllPlayers, getAllMatches } from '@/lib/firebaseService';
 import { Database, Users, Swords, MapPin, Plus, Loader2, RefreshCw, Camera, X, Save, RotateCcw, Play } from 'lucide-react';
 import Link from 'next/link';
 
@@ -34,6 +34,17 @@ function AdminDashboard() {
     const [startingSeason, setStartingSeason] = useState(false);
     const [seasonResult, setSeasonResult] = useState<string>('');
     const [showSeasonConfirm, setShowSeasonConfirm] = useState(false);
+    const [seasonFormData, setSeasonFormData] = useState({
+        seasonName: '',
+        createSnapshot: true,
+        preservePeakElo: true
+    });
+    const [currentSeasonStats, setCurrentSeasonStats] = useState<{
+        totalPlayers: number;
+        totalMatches: number;
+        topElo: number;
+        avgElo: number;
+    } | null>(null);
 
     const handleSeedDatabase = async () => {
         try {
@@ -118,16 +129,84 @@ function AdminDashboard() {
         }
     };
 
+    const handleShowSeasonConfirm = async () => {
+        try {
+            // Load current season stats before showing the confirmation
+            const [players, matches] = await Promise.all([
+                getAllPlayers(),
+                getAllMatches()
+            ]);
+
+            const totalPlayers = players.length || 0;
+            const totalMatches = matches.length || 0;
+            const topElo = totalPlayers > 0 ? Math.max(...players.map(p => p.elo)) : 0;
+            const avgElo = totalPlayers > 0 ? Math.round(players.reduce((sum, p) => sum + p.elo, 0) / totalPlayers) : 0;
+
+            setCurrentSeasonStats({ totalPlayers, totalMatches, topElo, avgElo });
+
+            // Set default season name
+            const now = new Date();
+            const monthNames = ['January', 'February', 'March', 'April', 'May', 'June',
+                'July', 'August', 'September', 'October', 'November', 'December'];
+            const defaultName = `${monthNames[now.getMonth()]} ${now.getFullYear()} Season`;
+            setSeasonFormData(prev => ({ ...prev, seasonName: defaultName }));
+
+            setShowSeasonConfirm(true);
+        } catch (error) {
+            setSeasonResult(`Error loading season stats: ${error instanceof Error ? error.message : 'Unknown error'}`);
+        }
+    };
+
     const handleStartNewSeason = async () => {
         try {
             setStartingSeason(true);
             setSeasonResult('');
 
+            let snapshotId = '';
+
+            // Step 1: Create snapshot if enabled
+            if (seasonFormData.createSnapshot) {
+                setSeasonResult('Creating season snapshot...');
+
+                const now = new Date();
+                const threeMonthsAgo = new Date(now);
+                threeMonthsAgo.setMonth(now.getMonth() - 3);
+
+                snapshotId = await createSnapshot({
+                    name: seasonFormData.seasonName || 'Season Snapshot',
+                    startDate: threeMonthsAgo,
+                    endDate: now
+                });
+
+                setSeasonResult(`Snapshot created (ID: ${snapshotId}). Now resetting season...`);
+            }
+
+            // Step 2: Start new season (saves last season data and resets)
             await startNewSeason();
-            setSeasonResult('New season started successfully! Current stats saved as last season data and reset to defaults.');
+
+            // Prepare success message
+            let successMessage = `✅ New season "${seasonFormData.seasonName}" started successfully!\n\n`;
+            successMessage += `📊 Changes:\n`;
+            successMessage += `• Current stats saved as "Last Season" data\n`;
+            successMessage += `• All players reset to 1200 ELO (Silver tier)\n`;
+            successMessage += `• Win/loss records reset to 0\n`;
+            successMessage += `• Win streaks reset to 0\n`;
+            if (seasonFormData.createSnapshot) {
+                successMessage += `\n📸 Snapshot created: ${snapshotId}`;
+            }
+
+            setSeasonResult(successMessage);
             setShowSeasonConfirm(false);
+
+            // Reset form
+            setSeasonFormData({
+                seasonName: '',
+                createSnapshot: true,
+                preservePeakElo: true
+            });
+            setCurrentSeasonStats(null);
         } catch (error) {
-            setSeasonResult(`Error starting new season: ${error instanceof Error ? error.message : 'Unknown error'}`);
+            setSeasonResult(`❌ Error starting new season: ${error instanceof Error ? error.message : 'Unknown error'}`);
         } finally {
             setStartingSeason(false);
         }
@@ -303,12 +382,12 @@ function AdminDashboard() {
                                 <div className="p-4 bg-slate-700/30 rounded-lg border border-slate-600/50">
                                     <h3 className="font-semibold text-white mb-2">Start New Season</h3>
                                     <p className="text-slate-400 text-sm mb-4">
-                                        Start a new season by saving current stats as &quot;last season&quot; data and resetting current stats to defaults.
+                                        Start a new season by creating a snapshot and saving current stats as &quot;last season&quot; data, then resetting current stats to defaults.
                                         This preserves historical achievements while starting fresh.
                                         <span className="block mt-1 text-blue-400 font-medium">💡 Recommended for season transitions</span>
                                     </p>
                                     <button
-                                        onClick={() => setShowSeasonConfirm(true)}
+                                        onClick={handleShowSeasonConfirm}
                                         disabled={startingSeason}
                                         className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 disabled:bg-blue-600/50 text-white px-4 py-2 rounded-lg transition-colors"
                                     >
@@ -326,7 +405,7 @@ function AdminDashboard() {
                                     </button>
 
                                     {seasonResult && (
-                                        <div className={`mt-4 p-3 rounded-lg text-sm ${seasonResult.includes('Error')
+                                        <div className={`mt-4 p-3 rounded-lg text-sm whitespace-pre-line ${seasonResult.includes('❌') || seasonResult.includes('Error')
                                             ? 'bg-red-500/10 border border-red-500/30 text-red-400'
                                             : 'bg-green-500/10 border border-green-500/30 text-green-400'
                                             }`}>
@@ -550,11 +629,14 @@ function AdminDashboard() {
             {/* New Season Confirmation Modal */}
             {showSeasonConfirm && (
                 <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-                    <div className="bg-slate-800 rounded-2xl p-6 w-full max-w-md border border-blue-500/30">
+                    <div className="bg-slate-800 rounded-2xl p-6 w-full max-w-2xl border border-blue-500/30 max-h-[90vh] overflow-y-auto">
                         <div className="flex items-center justify-between mb-6">
                             <h2 className="text-xl font-bold text-blue-400">🚀 Start New Season</h2>
                             <button
-                                onClick={() => setShowSeasonConfirm(false)}
+                                onClick={() => {
+                                    setShowSeasonConfirm(false);
+                                    setCurrentSeasonStats(null);
+                                }}
                                 className="text-slate-400 hover:text-white transition-colors"
                             >
                                 <X className="h-6 w-6" />
@@ -562,52 +644,121 @@ function AdminDashboard() {
                         </div>
 
                         <div className="space-y-4">
+                            {/* Current Season Stats */}
+                            {currentSeasonStats && (
+                                <div className="bg-slate-700/50 border border-slate-600/50 rounded-lg p-4">
+                                    <h3 className="text-white font-semibold mb-3">📊 Current Season Stats</h3>
+                                    <div className="grid grid-cols-2 gap-3 text-sm">
+                                        <div>
+                                            <span className="text-slate-400">Total Players:</span>
+                                            <span className="text-white font-medium ml-2">{currentSeasonStats.totalPlayers}</span>
+                                        </div>
+                                        <div>
+                                            <span className="text-slate-400">Total Matches:</span>
+                                            <span className="text-white font-medium ml-2">{currentSeasonStats.totalMatches}</span>
+                                        </div>
+                                        <div>
+                                            <span className="text-slate-400">Top ELO:</span>
+                                            <span className="text-white font-medium ml-2">{currentSeasonStats.topElo}</span>
+                                        </div>
+                                        <div>
+                                            <span className="text-slate-400">Average ELO:</span>
+                                            <span className="text-white font-medium ml-2">{currentSeasonStats.avgElo}</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            )}
+
+                            {/* Season Configuration */}
+                            <div className="bg-slate-700/50 border border-slate-600/50 rounded-lg p-4">
+                                <h3 className="text-white font-semibold mb-3">⚙️ Season Configuration</h3>
+                                <div className="space-y-3">
+                                    <div>
+                                        <label className="block text-sm font-medium text-slate-300 mb-2">
+                                            Season Name *
+                                        </label>
+                                        <input
+                                            type="text"
+                                            value={seasonFormData.seasonName}
+                                            onChange={(e) => setSeasonFormData(prev => ({ ...prev, seasonName: e.target.value }))}
+                                            className="w-full px-3 py-2 bg-slate-700/50 border border-slate-600 rounded-lg text-white focus:border-blue-500 focus:outline-none"
+                                            placeholder="e.g., Winter Championship 2024"
+                                            required
+                                        />
+                                    </div>
+
+                                    <div className="flex items-center gap-3">
+                                        <input
+                                            type="checkbox"
+                                            id="createSnapshot"
+                                            checked={seasonFormData.createSnapshot}
+                                            onChange={(e) => setSeasonFormData(prev => ({ ...prev, createSnapshot: e.target.checked }))}
+                                            className="w-4 h-4 text-blue-600 bg-slate-700 border-slate-600 rounded focus:ring-blue-500"
+                                        />
+                                        <label htmlFor="createSnapshot" className="text-sm text-slate-300">
+                                            Create snapshot before resetting (recommended)
+                                        </label>
+                                    </div>
+
+                                    <div className="flex items-center gap-3">
+                                        <input
+                                            type="checkbox"
+                                            id="preservePeakElo"
+                                            checked={seasonFormData.preservePeakElo}
+                                            onChange={(e) => setSeasonFormData(prev => ({ ...prev, preservePeakElo: e.target.checked }))}
+                                            className="w-4 h-4 text-blue-600 bg-slate-700 border-slate-600 rounded focus:ring-blue-500"
+                                        />
+                                        <label htmlFor="preservePeakElo" className="text-sm text-slate-300">
+                                            Preserve peak ELO from previous season
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* What will happen */}
                             <div className="bg-blue-500/10 border border-blue-500/30 rounded-lg p-4">
-                                <h3 className="text-blue-400 font-semibold mb-2">This will save current stats as &quot;Last Season&quot;:</h3>
+                                <h3 className="text-blue-400 font-semibold mb-2">📋 What will happen:</h3>
                                 <ul className="text-sm text-slate-300 space-y-1">
-                                    <li>• Current ELO → Last Season ELO</li>
-                                    <li>• Current Peak ELO → Last Season Peak ELO</li>
-                                    <li>• Current Rank → Last Season Rank</li>
+                                    {seasonFormData.createSnapshot && (
+                                        <li>• 📸 Create snapshot: &quot;{seasonFormData.seasonName || 'Season Snapshot'}&quot;</li>
+                                    )}
+                                    <li>• 💾 Save current stats as &quot;Last Season&quot; data</li>
+                                    <li>• 🔄 Reset all players to 1200 ELO (Silver tier)</li>
+                                    <li>• 📊 Reset wins/losses/streaks to 0</li>
+                                    <li>• 🗑️ Clear recent matches history</li>
                                 </ul>
                             </div>
 
                             <div className="bg-green-500/10 border border-green-500/30 rounded-lg p-4">
-                                <h3 className="text-green-400 font-semibold mb-2">Then reset current season to:</h3>
+                                <h3 className="text-green-400 font-semibold mb-2">✅ Players will keep:</h3>
                                 <ul className="text-sm text-slate-300 space-y-1">
-                                    <li>• ELO: 1200 (Silver tier)</li>
-                                    <li>• Wins: 0, Losses: 0</li>
-                                    <li>• Win Streak: 0</li>
-                                    <li>• Recent matches: cleared</li>
+                                    <li>• Name, avatar, and deck information</li>
+                                    <li>• Local affiliations</li>
+                                    <li>• Last season ELO, Peak ELO, and Rank</li>
                                 </ul>
                             </div>
 
                             <div className="bg-yellow-500/10 border border-yellow-500/30 rounded-lg p-4">
                                 <p className="text-yellow-400 text-sm">
-                                    <strong>Tip:</strong> This is the recommended way to transition between seasons as it preserves historical achievements while providing a fresh start.
+                                    <strong>⚠️ Warning:</strong> This action cannot be undone. Make sure you have created a snapshot if you want to preserve the current state for historical reference.
                                 </p>
-                            </div>
-
-                            <div className="text-sm text-slate-400">
-                                <p>Players will keep their:</p>
-                                <ul className="mt-1 space-y-1">
-                                    <li>• Name, avatar, and deck information</li>
-                                    <li>• Local affiliations</li>
-                                    <li>• Previous last season data (if any)</li>
-                                </ul>
                             </div>
                         </div>
 
                         <div className="flex justify-end gap-3 pt-6">
                             <button
                                 type="button"
-                                onClick={() => setShowSeasonConfirm(false)}
+                                onClick={() => {
+                                    setShowSeasonConfirm(false);
+                                    setCurrentSeasonStats(null);
+                                }}
                                 className="px-4 py-2 text-slate-400 hover:text-white transition-colors"
                             >
                                 Cancel
                             </button>
                             <button
                                 onClick={handleStartNewSeason}
-                                disabled={startingSeason}
+                                disabled={startingSeason || !seasonFormData.seasonName.trim()}
                                 className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 disabled:bg-blue-600/50 text-white px-4 py-2 rounded-lg transition-colors"
                             >
                                 <Play className="h-4 w-4" />

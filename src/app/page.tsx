@@ -34,9 +34,48 @@ export default function Home() {
           setPlayers(prevPlayers => {
             // Only update if we're viewing live data
             if (selectedSnapshot === 'live') {
-              return updatedPlayers.sort((a, b) => a.elo === b.elo ? (a.lastSeasonRank || 0) - (b.lastSeasonRank || 0) : b.elo - a.elo).map((player, index) => ({
+              // Sort players: ranked players first (by ELO), then unranked players (by last season data)
+              const sorted = updatedPlayers.sort((a, b) => {
+                const aRanked = a.totalMatches > 5;
+                const bRanked = b.totalMatches > 5;
+                
+                // Ranked players come first
+                if (aRanked && !bRanked) return -1;
+                if (!aRanked && bRanked) return 1;
+                
+                // Both unranked: sort by last season rank, then last season ELO, then name
+                if (!aRanked && !bRanked) {
+                  // If both have last season rank, sort by it
+                  if (a.lastSeasonRank && b.lastSeasonRank) {
+                    return a.lastSeasonRank - b.lastSeasonRank;
+                  }
+                  // If only one has last season rank, that one comes first
+                  if (a.lastSeasonRank) return -1;
+                  if (b.lastSeasonRank) return 1;
+                  
+                  // If both have last season ELO, sort by it
+                  if (a.lastSeasonElo && b.lastSeasonElo) {
+                    return b.lastSeasonElo - a.lastSeasonElo;
+                  }
+                  // If only one has last season ELO, that one comes first
+                  if (a.lastSeasonElo) return -1;
+                  if (b.lastSeasonElo) return 1;
+                  
+                  // Neither has last season data, sort alphabetically
+                  return a.name.localeCompare(b.name);
+                }
+                
+                // Both ranked: sort by ELO, then by last season rank
+                return a.elo === b.elo 
+                  ? (a.lastSeasonRank || 0) - (b.lastSeasonRank || 0) 
+                  : b.elo - a.elo;
+              });
+
+              // Assign ranks only to ranked players
+              let currentRank = 1;
+              return sorted.map((player) => ({
                 ...player,
-                rank: index + 1
+                rank: player.totalMatches > 5 ? currentRank++ : 0
               }));
             }
             // If we're viewing a snapshot, keep the current players unless it's the initial load
@@ -410,7 +449,7 @@ export default function Home() {
           <div className="mx-auto max-w-7xl px-4 sm:px-6 py-4 sm:py-8">
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
               <div className="text-slate-400 text-sm">
-                <p>&copy; 2024 Yu-Gi-Oh! Local Leaderboard. Built with Next.js & Tailwind CSS.</p>
+                <p>&copy; {new Date().getFullYear()} Yu-Gi-Oh! Local Leaderboard.</p>
               </div>
 
               <div className="flex items-center gap-4 text-sm">

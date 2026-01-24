@@ -83,7 +83,9 @@ function AddMatchForm() {
                 kFactor,
                 formData.winnerScore,
                 formData.loserScore,
-                Math.max(0, winner.streak) // Only positive streaks count for bonus
+                Math.max(0, winner.streak), // Only positive streaks count for bonus
+                winner.totalMatches, // Winner's matches played (for placement multiplier)
+                loser.totalMatches // Loser's matches played (for placement multiplier)
             );
 
             // Create match record

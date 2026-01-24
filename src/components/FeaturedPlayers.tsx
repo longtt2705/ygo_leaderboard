@@ -64,10 +64,17 @@ function FeaturedPlayerCard({ player, localMap }: FeaturedPlayerCardProps) {
 
                         {/* Tier Badge */}
                         <div className="absolute -top-1 -right-1 z-30">
-                            <div className={`rounded-lg bg-gradient-to-r ${getTierColor(player.tier)} px-2 py-1 text-xs font-bold uppercase text-white shadow-lg border border-slate-700`}>
-                                <Medal className="mr-1 inline h-3 w-3" />
-                                {player.tier}
-                            </div>
+                            {player.totalMatches > 5 ? (
+                                <div className={`rounded-lg bg-gradient-to-r ${getTierColor(player.tier)} px-2 py-1 text-xs font-bold uppercase text-white shadow-lg border border-slate-700`}>
+                                    <Medal className="mr-1 inline h-3 w-3" />
+                                    {player.tier}
+                                </div>
+                            ) : (
+                                <div className="rounded-lg bg-gradient-to-r from-amber-600 to-amber-800 px-2 py-1 text-xs font-bold uppercase text-white shadow-lg border border-slate-700">
+                                    <Medal className="mr-1 inline h-3 w-3" />
+                                    Unranked
+                                </div>
+                            )}
                         </div>
 
                         <div className="relative p-4 sm:p-6 pb-6 sm:pb-8 z-10">
@@ -126,7 +133,11 @@ function FeaturedPlayerCard({ player, localMap }: FeaturedPlayerCardProps) {
                             <div className="space-y-2 sm:space-y-3">
                                 <div className="flex items-center justify-between">
                                     <span className="text-xs sm:text-sm text-slate-400">Yu-Gi-Oh Points</span>
-                                    <span className="font-bold text-white text-sm sm:text-base">{formatElo(player.elo)}</span>
+                                    {player.totalMatches > 5 ? (
+                                        <span className="font-bold text-white text-sm sm:text-base">{formatElo(player.elo)}</span>
+                                    ) : (
+                                        <span className="font-bold text-amber-400 text-xs sm:text-sm">Placement ({player.totalMatches}/5)</span>
+                                    )}
                                 </div>
 
                                 <div className="flex items-center justify-between">

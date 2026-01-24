@@ -22,7 +22,11 @@ function LeaderboardRow({ player, localMap }: LeaderboardRowProps) {
             {/* Rank */}
             <td className="px-3 sm:px-6 py-3 sm:py-4">
                 <div className="flex items-center gap-3">
-                    <span className="text-xl sm:text-2xl font-bold text-slate-300">{player.rank}</span>
+                    {player.totalMatches > 5 ? (
+                        <span className="text-xl sm:text-2xl font-bold text-slate-300">{player.rank}</span>
+                    ) : (
+                        <span className="text-xs sm:text-sm font-bold text-amber-400 uppercase">Unranked</span>
+                    )}
                 </div>
             </td>
 
@@ -62,17 +66,32 @@ function LeaderboardRow({ player, localMap }: LeaderboardRowProps) {
             {/* Tier */}
             <td className="px-3 sm:px-6 py-3 sm:py-4">
                 <div className="flex items-center gap-2">
-                    <div className={`inline-flex items-center rounded-md bg-gradient-to-r ${getTierColor(player.tier)} px-1.5 sm:px-2 py-0.5 sm:py-1 text-xs font-bold uppercase text-white`}>
-                        <Medal className="mr-0.5 sm:mr-1 h-2.5 w-2.5 sm:h-3 sm:w-3" />
-                        <span className="hidden sm:inline">{player.tier}</span>
-                        <span className="sm:hidden">{player.tier.charAt(0)}</span>
-                    </div>
+                    {player.totalMatches > 5 ? (
+                        <div className={`inline-flex items-center rounded-md bg-gradient-to-r ${getTierColor(player.tier)} px-1.5 sm:px-2 py-0.5 sm:py-1 text-xs font-bold uppercase text-white`}>
+                            <Medal className="mr-0.5 sm:mr-1 h-2.5 w-2.5 sm:h-3 sm:w-3" />
+                            <span className="hidden sm:inline">{player.tier}</span>
+                            <span className="sm:hidden">{player.tier.charAt(0)}</span>
+                        </div>
+                    ) : (
+                        <div className="inline-flex items-center rounded-md bg-gradient-to-r from-amber-600 to-amber-800 px-1.5 sm:px-2 py-0.5 sm:py-1 text-xs font-bold uppercase text-white">
+                            <Medal className="mr-0.5 sm:mr-1 h-2.5 w-2.5 sm:h-3 sm:w-3" />
+                            <span className="hidden sm:inline">Unranked</span>
+                            <span className="sm:hidden">U</span>
+                        </div>
+                    )}
                 </div>
             </td>
 
             {/* LP */}
             <td className="px-3 sm:px-6 py-3 sm:py-4">
-                <span className="font-bold text-white text-sm sm:text-base">{formatElo(player.elo)}</span>
+                {player.totalMatches > 5 ? (
+                    <span className="font-bold text-white text-sm sm:text-base">{formatElo(player.elo)}</span>
+                ) : (
+                    <div className="flex items-center gap-2">
+                        <span className="text-xs sm:text-sm font-medium text-amber-400">Placement</span>
+                        <span className="text-xs text-slate-400">({player.totalMatches}/5)</span>
+                    </div>
+                )}
             </td>
 
             {/* Win Rate */}
@@ -125,7 +144,11 @@ function LeaderboardCard({ player, localMap }: LeaderboardRowProps) {
         <Link href={`/player/${player.id}`}>
             <div className="bg-slate-800/30 hover:bg-slate-700/50 border border-slate-700/50 rounded-lg p-4 transition-colors duration-200 my-4">
                 <div className="flex items-center gap-2">
-                    <span className="text-xl font-bold text-slate-300">#{player.rank}</span>
+                    {player.totalMatches > 5 ? (
+                        <span className="text-xl font-bold text-slate-300">#{player.rank}</span>
+                    ) : (
+                        <span className="text-sm font-bold text-amber-400 uppercase">Unranked</span>
+                    )}
                 </div>
                 <div className="flex items-center mb-3">
                     <div className="relative mx-auto sm:mx-0">
@@ -154,16 +177,32 @@ function LeaderboardCard({ player, localMap }: LeaderboardRowProps) {
                         <div className="text-sm text-slate-400">{player.mainDeck || player.decks.find(d => d.isMain)?.archetypeName || 'No Deck'}</div>
                     </div>
 
-                    <div className={`inline-flex items-center rounded-md bg-gradient-to-r ${getTierColor(player.tier)} px-2 py-1 text-xs font-bold uppercase text-white`}>
-                        <Medal className="mr-1 h-3 w-3" />
-                        {player.tier}
-                    </div>
+                    {player.totalMatches > 5 ? (
+                        <div className={`inline-flex items-center rounded-md bg-gradient-to-r ${getTierColor(player.tier)} px-2 py-1 text-xs font-bold uppercase text-white`}>
+                            <Medal className="mr-1 h-3 w-3" />
+                            {player.tier}
+                        </div>
+                    ) : (
+                        <div className="inline-flex items-center rounded-md bg-gradient-to-r from-amber-600 to-amber-800 px-2 py-1 text-xs font-bold uppercase text-white">
+                            <Medal className="mr-1 h-3 w-3" />
+                            Unranked
+                        </div>
+                    )}
                 </div>
 
                 <div className="grid grid-cols-3 gap-4 text-center">
                     <div>
-                        <div className="font-bold text-white">{formatElo(player.elo)}</div>
-                        <div className="text-xs text-slate-400">YP</div>
+                        {player.totalMatches > 5 ? (
+                            <>
+                                <div className="font-bold text-white">{formatElo(player.elo)}</div>
+                                <div className="text-xs text-slate-400">YP</div>
+                            </>
+                        ) : (
+                            <>
+                                <div className="font-bold text-amber-400">Placement</div>
+                                <div className="text-xs text-slate-400">{player.totalMatches}/5</div>
+                            </>
+                        )}
                     </div>
                     <div>
                         <div className="font-semibold text-emerald-400">{player.winRate}%</div>

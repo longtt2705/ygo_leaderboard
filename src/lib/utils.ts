@@ -13,15 +13,25 @@ export function calculateElo(
   kFactor: number = 32,
   winnerScore: number = 2,
   loserScore: number = 0,
-  winnerStreak: number = 0
+  winnerStreak: number = 0,
+  winnerMatchesPlayed: number = 0,
+  loserMatchesPlayed: number = 0
 ): EloCalculation {
   // Expected scores
   const expectedWinner = 1 / (1 + Math.pow(10, (loserElo - winnerElo) / 400));
   const expectedLoser = 1 / (1 + Math.pow(10, (winnerElo - loserElo) / 400));
 
   // Base ELO change
-  const baseWinnerChange = kFactor * (1 - expectedWinner);
-  const baseLoserChange = kFactor * (0 - expectedLoser);
+  let baseWinnerChange = kFactor * (1 - expectedWinner);
+  let baseLoserChange = kFactor * (0 - expectedLoser);
+
+  // Placement match multipliers (first 5 games)
+  if (winnerMatchesPlayed < 5) {
+    baseWinnerChange *= 5; // 5x ELO gain for placement matches
+  }
+  if (loserMatchesPlayed < 5) {
+    baseLoserChange *= 2; // 2x ELO loss for placement matches
+  }
 
   // Bonus for 2-0 victory (dominant win)
   let dominantWinBonus = 0;
