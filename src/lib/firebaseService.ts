@@ -15,7 +15,7 @@ import {
   Timestamp
 } from 'firebase/firestore';
 import { db } from './firebase';
-import { Player, Match, PlayerTier, Local, DeckArchetype, Snapshot } from '@/types';
+import { Player, Match, PlayerTier, Local, DeckArchetype, Snapshot, SeasonConfig } from '@/types';
 
 // Collections
 const PLAYERS_COLLECTION = 'players';
@@ -776,54 +776,135 @@ export async function resetAllPlayersToDefault(): Promise<void> {
 }
 
 // Start a new season - save current stats as last season and reset current stats
-export async function startNewSeason(): Promise<void> {
+export async function getCurrentSeasonNumber(): Promise<number> {
   try {
-    console.log('Starting new season...');
-    
+    const snapshots = await getAllSnapshots();
+    // Current season number is the total number of snapshots + 1
+    return snapshots.length + 1;
+  } catch (error) {
+    console.error('Error getting current season number:', error);
+    return 1; // Default to season 1 if error
+  }
+}
+
+// Create a snapshot of the current season
+export async function createSeasonSnapshot(config: SeasonConfig): Promise<string> {
+  try {
     const players = await getAllPlayers();
-    console.log(`Found ${players.length} players to transition to new season`);
+    const matches = await getAllMatches();
+    
+    // Calculate metadata
+    const totalPlayers = players.length;
+    const totalMatches = matches.length;
+    const averageElo = totalPlayers > 0 
+      ? players.reduce((sum, p) => sum + p.elo, 0) / totalPlayers 
+      : 0;
+    const topPlayer = players.length > 0 
+      ? players.reduce((top, p) => p.elo > top.elo ? p : top, players[0]) 
+      : null;
+    const topPlayerElo = topPlayer?.elo || 0;
+    
+    // Count deck usage
+    const deckCounts: { [key: string]: number } = {};
+    players.forEach(player => {
+      const mainDeck = player.mainDeck || player.decks[0]?.archetypeName || 'Unknown';
+      deckCounts[mainDeck] = (deckCounts[mainDeck] || 0) + 1;
+    });
+    const mostPlayedDeck = Object.entries(deckCounts).sort((a, b) => b[1] - a[1])[0]?.[0] || 'Unknown';
+    
+    const snapshotData = {
+      name: config.seasonName,
+      startDate: config.startDate,
+      endDate: config.endDate || new Date(),
+      createdAt: serverTimestamp(),
+      totalPlayers,
+      players,
+      metadata: {
+        averageElo,
+        topPlayerElo,
+        totalMatches,
+        mostPlayedDeck
+      }
+    };
+    
+    const snapshotId = await createSnapshot(snapshotData);
+    console.log(`Season snapshot created: ${snapshotId}`);
+    return snapshotId;
+  } catch (error) {
+    console.error('Error creating season snapshot:', error);
+    throw error;
+  }
+}
 
-    // Default values for new season
-    const defaultElo = 1200;
-    const defaultTier = PlayerTier.SILVER;
-    const defaultWins = 0;
-    const defaultLosses = 0;
-    const defaultWinRate = 0;
-    const defaultTotalMatches = 0;
-    const defaultStreak = 0;
-    const defaultRecentMatches: Match[] = [];
-
-    // Update all players: save current stats as last season, reset current stats
+// Reset player data for new season
+export async function resetSeasonData(config: SeasonConfig): Promise<void> {
+  try {
+    const players = await getAllPlayers();
+    
+    const resetElo = config.resetElo || 1200;
+    const resetTier = config.resetTier || PlayerTier.SILVER;
+    const preservePeakElo = config.preservePeakElo !== false;
+    
     const updatePromises = players.map((player, index) => 
       updatePlayer(player.id, {
-        // Reset current season stats
-        elo: defaultElo,
-        tier: defaultTier,
-        wins: defaultWins,
-        losses: defaultLosses,
-        winRate: defaultWinRate,
-        totalMatches: defaultTotalMatches,
-        streak: defaultStreak,
-        peakElo: defaultElo, // Reset peak ELO for new season
-        rank: index + 1, // Assign ranks 1, 2, 3... (will be recalculated anyway)
-        recentMatches: defaultRecentMatches,
-        // Save current stats as last season data
+        elo: resetElo,
+        tier: resetTier,
+        wins: 0,
+        losses: 0,
+        winRate: 0,
+        totalMatches: 0,
+        streak: 0,
+        peakElo: preservePeakElo ? player.peakElo : resetElo,
+        rank: index + 1,
+        recentMatches: [],
         lastSeasonElo: player.elo,
         lastSeasonPeakElo: player.peakElo,
         lastSeasonRank: player.rank
       })
     );
-
-    await Promise.all(updatePromises);
     
-    // Recalculate rankings after reset (though they should all be the same ELO now)
+    await Promise.all(updatePromises);
     await recalculateRankings();
     
-    console.log('New season started successfully - current stats saved as last season and reset');
+    console.log('Season data reset successfully');
+  } catch (error) {
+    console.error('Error resetting season data:', error);
+    throw error;
+  }
+}
+
+// Start a new season (with optional snapshot)
+export async function startNewSeason(
+  config?: SeasonConfig, 
+  createSnapshotFirst?: boolean
+): Promise<{ snapshotId?: string }> {
+  try {
+    console.log('Starting new season...');
+    
+    let snapshotId: string | undefined;
+    
+    // Create snapshot if requested
+    if (createSnapshotFirst && config) {
+      snapshotId = await createSeasonSnapshot(config);
+    }
+    
+    // Reset player data
+    const resetConfig: SeasonConfig = config || {
+      seasonNumber: await getCurrentSeasonNumber(),
+      seasonName: 'New Season',
+      startDate: new Date(),
+      resetElo: 1200,
+      resetTier: PlayerTier.SILVER,
+      preservePeakElo: true
+    };
+    
+    await resetSeasonData(resetConfig);
+    
+    console.log('New season started successfully');
+    return { snapshotId };
   } catch (error) {
     console.error('Start new season failed:', error);
     
-    // Log more details for debugging
     if (error instanceof Error) {
       console.error('Error message:', error.message);
       console.error('Error stack:', error.stack);

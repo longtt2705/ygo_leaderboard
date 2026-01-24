@@ -128,4 +128,14 @@ export interface Snapshot {
     totalMatches: number;
     mostPlayedDeck: string;
   };
+}
+
+export interface SeasonConfig {
+  seasonNumber: number;
+  seasonName: string;
+  startDate: Date;
+  endDate?: Date;
+  resetElo?: number;
+  resetTier?: PlayerTier;
+  preservePeakElo?: boolean;
 } 

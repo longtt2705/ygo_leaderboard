@@ -2,8 +2,8 @@
 
 import React, { useState, useEffect } from 'react';
 import { ChevronDown, Calendar, Trophy, History } from 'lucide-react';
-import { getAllSeasons, getCurrentSeasonNumber } from '@/lib/firebaseService';
-import { SeasonSnapshot, PlayerTier } from '@/types';
+import { getAllSnapshots, getCurrentSeasonNumber } from '@/lib/firebaseService';
+import { Snapshot, PlayerTier } from '@/types';
 
 interface SeasonSelectorProps {
     onSeasonChange: (seasonId: string | null) => void;
@@ -12,7 +12,7 @@ interface SeasonSelectorProps {
 }
 
 export default function SeasonSelector({ onSeasonChange, selectedSeasonId, className = '' }: SeasonSelectorProps) {
-    const [seasons, setSeasons] = useState<SeasonSnapshot[]>([]);
+    const [seasons, setSeasons] = useState<Snapshot[]>([]);
     const [loading, setLoading] = useState(true);
     const [isOpen, setIsOpen] = useState(false);
     const [currentSeasonNumber, setCurrentSeasonNumber] = useState(1);
@@ -28,7 +28,7 @@ export default function SeasonSelector({ onSeasonChange, selectedSeasonId, class
 
                 try {
                     [seasonsData, currentNumber] = await Promise.all([
-                        getAllSeasons(),
+                        getAllSnapshots(),
                         getCurrentSeasonNumber()
                     ]);
                     console.log('Loaded seasons from Firebase:', seasonsData.length);
@@ -38,40 +38,39 @@ export default function SeasonSelector({ onSeasonChange, selectedSeasonId, class
                     seasonsData = [
                         {
                             id: 'demo-season-1',
-                            seasonNumber: 1,
-                            seasonName: 'Demo Season 1',
+                            name: 'Demo Season 1',
                             startDate: new Date('2024-01-01'),
                             endDate: new Date('2024-03-31'),
-                            topPlayer: {
-                                id: 'demo-champion',
-                                name: 'Demo Champion',
-                                elo: 2000,
-                                avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=champion',
-                                rank: 1,
-                                wins: 25,
-                                losses: 5,
-                                winRate: 83.3,
-                                tier: 'grandmaster' as PlayerTier,
-                                locals: [],
-                                decks: [{ archetypeId: 'demo-1', archetypeName: 'Blue-Eyes White Dragon', isMain: true }],
-                                mainDeck: 'Blue-Eyes White Dragon',
-                                totalMatches: 30,
-                                streak: 5,
-                                peakElo: 2000,
-                                recentMatches: []
-                            },
-                            leaderboardStats: {
-                                totalPlayers: 25,
-                                totalMatches: 150,
+                            createdAt: new Date(),
+                            totalPlayers: 25,
+                            players: [
+                                {
+                                    id: 'demo-champion',
+                                    name: 'Demo Champion',
+                                    elo: 2000,
+                                    avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=champion',
+                                    rank: 1,
+                                    wins: 25,
+                                    losses: 5,
+                                    winRate: 83.3,
+                                    tier: 'grandmaster' as PlayerTier,
+                                    locals: [],
+                                    decks: [{ archetypeId: 'demo-1', archetypeName: 'Blue-Eyes White Dragon', isMain: true }],
+                                    mainDeck: 'Blue-Eyes White Dragon',
+                                    totalMatches: 30,
+                                    streak: 5,
+                                    peakElo: 2000,
+                                    recentMatches: []
+                                }
+                            ],
+                            metadata: {
                                 averageElo: 1600,
                                 topPlayerElo: 2000,
+                                totalMatches: 150,
                                 mostPlayedDeck: 'Blue-Eyes White Dragon'
-                            },
-                            players: [],
-                            matches: [],
-                            createdAt: new Date()
+                            }
                         }
-                    ] as SeasonSnapshot[];
+                    ] as Snapshot[];
                     currentNumber = 2;
                 }
 
@@ -105,14 +104,20 @@ export default function SeasonSelector({ onSeasonChange, selectedSeasonId, class
         isLive: true
     };
 
-    const historicalSeasonOptions = seasons.map(season => ({
-        id: season.id,
-        label: season.seasonName,
-        subtitle: `Champion: ${season.topPlayer?.name || 'N/A'} (${season.leaderboardStats.totalPlayers} players)`,
-        icon: <History className="h-4 w-4 text-blue-400" />,
-        isLive: false,
-        endDate: season.endDate
-    }));
+    const historicalSeasonOptions = seasons.map(season => {
+        const topPlayer = season.players && season.players.length > 0 
+            ? season.players.reduce((top, player) => player.elo > top.elo ? player : top, season.players[0])
+            : null;
+        
+        return {
+            id: season.id,
+            label: season.name,
+            subtitle: `Champion: ${topPlayer?.name || 'N/A'} (${season.totalPlayers} players)`,
+            icon: <History className="h-4 w-4 text-blue-400" />,
+            isLive: false,
+            endDate: season.endDate
+        };
+    });
 
     const allOptions = [currentSeasonOption, ...historicalSeasonOptions];
 
@@ -229,7 +234,7 @@ export default function SeasonSelector({ onSeasonChange, selectedSeasonId, class
 
 // Compact version for mobile/smaller spaces
 export function CompactSeasonSelector({ onSeasonChange, selectedSeasonId, className = '' }: SeasonSelectorProps) {
-    const [seasons, setSeasons] = useState<SeasonSnapshot[]>([]);
+    const [seasons, setSeasons] = useState<Snapshot[]>([]);
     const [loading, setLoading] = useState(true);
     const [currentSeasonNumber, setCurrentSeasonNumber] = useState(1);
 
@@ -237,7 +242,7 @@ export function CompactSeasonSelector({ onSeasonChange, selectedSeasonId, classN
         const fetchSeasons = async () => {
             try {
                 const [seasonsData, currentNumber] = await Promise.all([
-                    getAllSeasons(),
+                    getAllSnapshots(),
                     getCurrentSeasonNumber()
                 ]);
 
@@ -266,7 +271,7 @@ export function CompactSeasonSelector({ onSeasonChange, selectedSeasonId, classN
         { value: '', label: `Current Season ${currentSeasonNumber}` },
         ...seasons.map(season => ({
             value: season.id,
-            label: season.seasonName
+            label: season.name
         }))
     ];
 

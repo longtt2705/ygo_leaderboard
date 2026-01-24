@@ -5,7 +5,7 @@ import {
     startNewSeason,
     createSeasonSnapshot,
     resetSeasonData,
-    getAllSeasons,
+    getAllSnapshots,
     getCurrentSeasonNumber
 } from '@/lib/firebaseService';
 import { SeasonConfig, PlayerTier } from '@/types';
@@ -122,13 +122,16 @@ export default function SeasonManager({ onSeasonChange }: SeasonManagerProps) {
     const handleListSeasons = async () => {
         setLoading(true);
         try {
-            const seasons = await getAllSeasons();
+            const seasons = await getAllSnapshots();
             if (seasons.length === 0) {
                 showMessage('No seasons found.', 'info');
             } else {
-                const seasonList = seasons.slice(0, 5).map((season, index) =>
-                    `${index === 0 ? '👑' : '  '} Season ${season.seasonNumber}: ${season.seasonName} - Champion: ${season.topPlayer?.name || 'N/A'} (${season.topPlayer?.elo || 0} ELO)`
-                ).join('\n');
+                const seasonList = seasons.slice(0, 5).map((season, index) => {
+                    const topPlayer = season.players && season.players.length > 0
+                        ? season.players.reduce((top, p) => p.elo > top.elo ? p : top, season.players[0])
+                        : null;
+                    return `${index === 0 ? '👑' : '  '} ${season.name} - Champion: ${topPlayer?.name || 'N/A'} (${topPlayer?.elo || 0} ELO)`;
+                }).join('\n');
 
                 alert(`Recent Seasons:\n\n${seasonList}\n\n${seasons.length > 5 ? `... and ${seasons.length - 5} more seasons` : ''}`);
             }
