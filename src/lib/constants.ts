@@ -26,7 +26,11 @@ export const BOSS_MONSTER_IMAGES: Record<string, string> = {
   'Orcust': 'https://images.ygoprodeck.com/images/cards/93854893.jpg',
   'Mikanko': 'https://images.ygoprodeck.com/images/cards/81260679.jpg',
   'Ghoti': 'https://images.ygoprodeck.com/images/cards/72309040.jpg',
-  'Goblin Biker': 'https://images.ygoprodeck.com/images/cards/72409226.jpg'
+  'Goblin Biker': 'https://images.ygoprodeck.com/images/cards/72409226.jpg',
+  'K9 VS': 'https://images.ygoprodeck.com/images/cards/27420823.jpg',
+  'Branded': 'https://images.ygoprodeck.com/images/cards/44146295.jpg',
+  'Memento': 'https://images.ygoprodeck.com/images/cards/14529511.jpg',
+  'Hero': 'https://images.ygoprodeck.com/images/cards/58932615.jpg',
 };
 
 // Default boss monster image (Blue-Eyes White Dragon)
