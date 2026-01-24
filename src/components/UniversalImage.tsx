@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import Image from 'next/image';
 import { generateDefaultAvatar } from '@/lib/utils';
 
@@ -13,6 +13,13 @@ interface UniversalImageProps {
     playerName?: string;
     fallbackInitial?: string;
 }
+
+// List of unreliable domains to avoid (moved outside component to prevent re-creation)
+const UNRELIABLE_DOMAINS = [
+    'via.placeholder.com',
+    'placeholder.com',
+    'placehold.it'
+];
 
 export function UniversalImage({
     src,
@@ -27,25 +34,18 @@ export function UniversalImage({
     const [hasError, setHasError] = useState(false);
     const [loading, setLoading] = useState(true);
 
-    // List of unreliable domains to avoid
-    const unreliableDomains = [
-        'via.placeholder.com',
-        'placeholder.com',
-        'placehold.it'
-    ];
-
-    // Generate fallback avatar
-    const generateFallback = () => {
+    // Generate fallback avatar - wrapped in useCallback to prevent re-creation
+    const generateFallback = useCallback(() => {
         const name = playerName || fallbackInitial || alt || 'User';
         return generateDefaultAvatar(name, Math.max(width, height));
-    };
+    }, [playerName, fallbackInitial, alt, width, height]);
 
     useEffect(() => {
         setHasError(false);
         setLoading(true);
 
         // If no src or unreliable domain, use fallback immediately
-        if (!src || src.trim() === '' || unreliableDomains.some(domain => src.includes(domain))) {
+        if (!src || src.trim() === '' || UNRELIABLE_DOMAINS.some(domain => src.includes(domain))) {
             setImageSrc(generateFallback());
             setHasError(true);
             setLoading(false);
@@ -70,7 +70,7 @@ export function UniversalImage({
             img.onload = null;
             img.onerror = null;
         };
-    }, [src, playerName, fallbackInitial, alt, width, height, generateFallback, unreliableDomains]);
+    }, [src, generateFallback]);
 
     const handleImageError = () => {
         if (!hasError) {

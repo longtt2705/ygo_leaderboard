@@ -11,6 +11,13 @@ interface ReliableAvatarProps {
     name: string; // Required for generating fallback
 }
 
+// List of unreliable domains to avoid (moved outside component to prevent re-creation)
+const UNRELIABLE_DOMAINS = [
+    'via.placeholder.com',
+    'placeholder.com',
+    'placehold.it'
+];
+
 export function ReliableAvatar({
     src,
     alt,
@@ -21,26 +28,19 @@ export function ReliableAvatar({
     const [avatarSrc, setAvatarSrc] = useState<string | undefined>(src);
     const [hasError, setHasError] = useState(false);
 
-    // List of unreliable domains to avoid
-    const unreliableDomains = [
-        'via.placeholder.com',
-        'placeholder.com',
-        'placehold.it'
-    ];
-
     useEffect(() => {
         // Reset error state when src changes
         setHasError(false);
 
         // Check if the source is from an unreliable domain or empty
-        if (!src || src.trim() === '' || unreliableDomains.some(domain => src.includes(domain))) {
+        if (!src || src.trim() === '' || UNRELIABLE_DOMAINS.some(domain => src.includes(domain))) {
             // Use undefined to trigger fallback immediately
             setAvatarSrc(undefined);
             setHasError(true);
         } else {
             setAvatarSrc(src);
         }
-    }, [src, unreliableDomains]);
+    }, [src]);
 
     const handleError = () => {
         if (!hasError) {

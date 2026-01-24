@@ -120,7 +120,7 @@ function PlayersManagement() {
             const tier = getTierFromElo(formData.elo);
             const avatar = formData.avatar || generateAvatarUrl(formData.name);
 
-            const playerData: any = {
+            const basePlayerData = {
                 name: formData.name,
                 avatar,
                 elo: formData.elo,
@@ -143,24 +143,27 @@ function PlayersManagement() {
                 rank: editingPlayer ? editingPlayer.rank : 0 // Will be calculated when fetched
             };
 
-            // Only include lastSeason fields when editing and they exist to avoid Firestore undefined errors
             if (editingPlayer) {
+                // For updating, use Partial<Player>
+                const updateData: Partial<Player> = { ...basePlayerData };
+                
+                // Only include lastSeason fields when editing and they exist to avoid Firestore undefined errors
                 if (editingPlayer.lastSeasonElo !== undefined) {
-                    playerData.lastSeasonElo = editingPlayer.lastSeasonElo;
+                    updateData.lastSeasonElo = editingPlayer.lastSeasonElo;
                 }
                 if (editingPlayer.lastSeasonPeakElo !== undefined) {
-                    playerData.lastSeasonPeakElo = editingPlayer.lastSeasonPeakElo;
+                    updateData.lastSeasonPeakElo = editingPlayer.lastSeasonPeakElo;
                 }
                 if (editingPlayer.lastSeasonRank !== undefined) {
-                    playerData.lastSeasonRank = editingPlayer.lastSeasonRank;
+                    updateData.lastSeasonRank = editingPlayer.lastSeasonRank;
                 }
-            }
-
-            if (editingPlayer) {
-                await updatePlayer(editingPlayer.id, playerData);
+                
+                await updatePlayer(editingPlayer.id, updateData);
                 setSuccess('Player updated successfully!');
             } else {
-                await createPlayer(playerData);
+                // For creating, use Omit<Player, 'id'>
+                const createData: Omit<Player, 'id'> = basePlayerData;
+                await createPlayer(createData);
                 setSuccess('Player created successfully!');
             }
 

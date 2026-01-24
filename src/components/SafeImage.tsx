@@ -13,24 +13,24 @@ interface SafeImageProps {
     playerName?: string; // For generating personalized fallback
 }
 
+// List of unreliable domains to avoid (moved outside component to prevent re-creation)
+const UNRELIABLE_DOMAINS = [
+    'via.placeholder.com',
+    'placeholder.com',
+    'placehold.it'
+];
+
+// List of domains that are configured in Next.js config
+const CONFIGURED_DOMAINS = [
+    'res.cloudinary.com',
+    'lh3.googleusercontent.com',
+    'images.unsplash.com'
+];
+
 export function SafeImage({ src, alt, width, height, className, playerName }: SafeImageProps) {
     const [imageSrc, setImageSrc] = useState(src);
     const [hasError, setHasError] = useState(false);
     const [useUnoptimized, setUseUnoptimized] = useState(false);
-
-    // List of unreliable domains to avoid
-    const unreliableDomains = [
-        'via.placeholder.com',
-        'placeholder.com',
-        'placehold.it'
-    ];
-
-    // List of domains that are configured in Next.js config
-    const configuredDomains = [
-        'res.cloudinary.com',
-        'lh3.googleusercontent.com',
-        'images.unsplash.com'
-    ];
 
     useEffect(() => {
         // Reset error state when src changes
@@ -38,7 +38,7 @@ export function SafeImage({ src, alt, width, height, className, playerName }: Sa
         setUseUnoptimized(false);
 
         // Check if the source is from an unreliable domain
-        const isUnreliable = unreliableDomains.some(domain => src.includes(domain));
+        const isUnreliable = UNRELIABLE_DOMAINS.some(domain => src.includes(domain));
 
         if (isUnreliable || !src || src.trim() === '') {
             // Use local fallback immediately for unreliable sources
@@ -48,11 +48,11 @@ export function SafeImage({ src, alt, width, height, className, playerName }: Sa
             setUseUnoptimized(true);
         } else {
             // Check if domain is configured in Next.js
-            const isConfigured = configuredDomains.some(domain => src.includes(domain));
+            const isConfigured = CONFIGURED_DOMAINS.some(domain => src.includes(domain));
             setImageSrc(src);
             setUseUnoptimized(!isConfigured); // Use unoptimized for external domains
         }
-    }, [src, alt, playerName, width, height, configuredDomains, unreliableDomains]);
+    }, [src, alt, playerName, width, height]);
 
     const handleError = () => {
         if (!hasError) {
