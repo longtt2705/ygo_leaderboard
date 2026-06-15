@@ -87,7 +87,6 @@ function AddMatchForm() {
                 Math.max(0, winner.streak), // winner streak
                 Math.max(0, loser.streak),  // loser streak
 
-                winner.rank,
                 loser.rank,
 
                 winner.totalMatches,

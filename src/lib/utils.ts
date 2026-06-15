@@ -15,7 +15,6 @@ export function calculateElo(
   loserScore: number = 0,
   winnerStreak: number = 0,
   loserStreak: number = 0,
-  winnerRank: number = 999,
   loserRank: number = 999,
   winnerMatchesPlayed: number = 0,
   loserMatchesPlayed: number = 0
