@@ -44,6 +44,10 @@ export interface Match {
   streakBonus?: number;
   bountyBonus?: number;
   date: Date;
+  duration: number; // in minutes
+  matchType: MatchType;
+  winnerScore: number;
+  loserScore: number;
 }
 
 export interface MatchHistory {
