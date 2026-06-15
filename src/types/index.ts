@@ -42,6 +42,7 @@ export interface Match {
   eloChange: number;
   dominantWinBonus?: number;
   streakBonus?: number;
+  bountyBonus?: number;
   date: Date;
   duration: number; // in minutes
   matchType: MatchType;
@@ -93,6 +94,7 @@ export interface EloCalculation {
   eloChange: number;
   dominantWinBonus?: number;
   streakBonus?: number;
+  bountyBonus?: number;
 }
 
 export interface Local {
