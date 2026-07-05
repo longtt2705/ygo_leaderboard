@@ -56,7 +56,7 @@ export function calculateElo(
 
   if (winnerStreak > 0) {
     const streakMultiplier =
-      Math.min(winnerStreak, 10) * 0.025;
+      Math.min(winnerStreak, 10) * 0.05;
 
     streakBonus =
       Math.round(kFactor * streakMultiplier);
@@ -106,13 +106,13 @@ export function calculateElo(
 
   const newWinnerElo =
     Math.round(
-      winnerElo + totalWinnerChange
+      winnerElo + Math.max(totalWinnerChange, 3)
     );
 
   // Loser does NOT lose bounty
   const newLoserElo =
     Math.round(
-      loserElo + baseLoserChange
+      loserElo + Math.min(baseLoserChange, -3)
     );
 
   return {
@@ -191,11 +191,11 @@ export function formatRecord(wins: number, losses: number): string {
 export function getKFactor(elo: number, matchesPlayed: number): number {
   // New players get higher K-factor for faster rating changes
   if (matchesPlayed < 30) return 40;
-  
+
   // High-rated players get lower K-factor for stability
   if (elo >= 2400) return 16;
   if (elo >= 2100) return 24;
-  
+
   return 32;
 }
 
@@ -219,10 +219,10 @@ export function generateDefaultAvatar(name: string, size: number = 150): string 
     '#84CC16', // lime
     '#F97316', // orange
   ];
-  
+
   const colorIndex = name.charCodeAt(0) % colors.length;
   const bgColor = colors[colorIndex];
-  
+
   const svg = `
     <svg width="${size}" height="${size}" viewBox="0 0 ${size} ${size}" xmlns="http://www.w3.org/2000/svg">
       <rect width="${size}" height="${size}" fill="${bgColor}" rx="${size / 8}"/>
@@ -231,7 +231,7 @@ export function generateDefaultAvatar(name: string, size: number = 150): string 
       </text>
     </svg>
   `;
-  
+
   return `data:image/svg+xml;base64,${btoa(svg)}`;
 }
 
